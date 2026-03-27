@@ -6,6 +6,12 @@ import Dropdown, { type DropdownOption } from "../components/ui/Dropdown.vue";
 import PriceRange from "../components/ui/PriceRange.vue";
 import ImageUpload from "../components/ui/ImageUpload.vue";
 import { debounce } from "../utils/debounce";
+import ActionButton from "../components/ui/ActionButton.vue";
+import NavigationButton from "../components/ui/NavigationButton.vue";
+
+const handleClickButton = () => alert("Pressed Button");
+const handleSubmit = () =>
+  alert("Submit Form\n\nYes, it's submit form button\n\nเชื่อเถอะ");
 
 const dropdownOptions: DropdownOption[] = [
   { label: "Place Holder", value: "1" },
@@ -38,7 +44,85 @@ const onPriceRangeChanged = debounce((val: [number, number]) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F3F4F6] p-6 md:p-12 font-sans">
+  <div class="flex flex-col gap-10 min-h-screen bg-[#F3F4F6] p-6 md:p-12">
+    <!-- ปุ่ม -->
+    <div class="flex flex-col gap-4 justify-center items-center">
+      <div class="flex gap-2 items-center">
+        <span class="style-body-1">Normal</span>
+        <span class="style-body-1">Disable</span>
+      </div>
+
+      <!-- Button Primary -->
+      <div class="flex gap-2 items-center">
+        <!-- ใช้ @click="..." เพื่อกำหนดการทำงานเมื่อปุ่มถูกคลิก -->
+        <ActionButton @click="handleClickButton">Button Primary</ActionButton>
+        <ActionButton @click="handleClickButton" disabled>
+          Button Primary
+        </ActionButton>
+      </div>
+      <div class="flex gap-2 items-center">
+        <ActionButton size="lg" @click="handleClickButton">
+          Button Primary, Large
+        </ActionButton>
+        <ActionButton size="lg" @click="handleClickButton" disabled>
+          Button Primary, Large
+        </ActionButton>
+      </div>
+
+      <!-- Button Secondary -->
+      <div class="flex gap-2 items-center">
+        <ActionButton variant="secondary" @click="handleClickButton">
+          Button Secondary
+        </ActionButton>
+        <ActionButton variant="secondary" @click="handleClickButton" disabled>
+          Button Secondary
+        </ActionButton>
+      </div>
+      <div class="flex gap-2 items-center">
+        <ActionButton variant="secondary" size="lg" @click="handleClickButton">
+          Button Secondary, Large
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="lg"
+          @click="handleClickButton"
+          disabled
+        >
+          Button Secondary, Large
+        </ActionButton>
+      </div>
+
+      <!-- Button Ghost -->
+      <div class="flex gap-2 items-center">
+        <ActionButton variant="ghost" @click="handleClickButton">
+          Button Ghost
+        </ActionButton>
+        <ActionButton variant="ghost" @click="handleClickButton" disabled>
+          Button Ghost
+        </ActionButton>
+      </div>
+
+      <!-- ส่ง Form -->
+      <form @submit="handleSubmit" class="flex flex-col">
+        <ActionButton type="submit">Submit Button</ActionButton>
+      </form>
+
+      <!-- Navigation -->
+      <NavigationButton to="/">Navigation Button</NavigationButton>
+
+      <h5 class="style-headline-2">Button Width</h5>
+      <div class="flex flex-col items-center gap-2 w-100 bg-blue-200 p-4">
+        การขยายปุ่มให้เต็ม parent
+        <span>With out <code>w-full</code></span>
+        <ActionButton>Button Primary</ActionButton>
+        <ActionButton size="lg">Button Primary</ActionButton>
+
+        <span>With <code>w-full</code></span>
+        <ActionButton class="w-full">Button Primary</ActionButton>
+        <ActionButton size="lg" class="w-full">Button Primary</ActionButton>
+      </div>
+    </div>
+
     <div class="max-w-5xl mx-auto space-y-12">
       <!-- กล่องการ์ดด้านบนสุด -->
       <section>
