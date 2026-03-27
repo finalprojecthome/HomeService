@@ -6,6 +6,11 @@ import { useRouter } from "vue-router";
 import Dropdown, { type DropdownOption } from "../components/ui/Dropdown.vue";
 import PriceRange from "../components/ui/PriceRange.vue";
 import ImageUpload from "../components/ui/ImageUpload.vue";
+import RadioButton from "../components/ui/RadioButton.vue";
+import RadioButtonWithInput from "../components/ui/RadioButtonWithInput.vue";
+import Checkbox from "../components/ui/Checkbox.vue";
+import SelectBox from "../components/ui/SelectBox.vue";
+import SelectFilter from "../components/ui/SelectFilter.vue";
 import { debounce } from "../utils/debounce";
 import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
@@ -40,6 +45,21 @@ const selectedDropdown = ref<string | null>(null);
 const priceRange = ref<[number, number]>([0, 2000]);
 
 const uploadedImage = ref<File | null>(null);
+const radio1 = ref("selected");
+const radioInput1 = ref("selected");
+const inputText1 = ref("");
+const inputText2 = ref("");
+const inputText3 = ref("");
+const checkbox1 = ref(false);
+const checkbox2 = ref(false);
+const checkbox3 = ref(true);
+const selectBox1 = ref("selected");
+const filter1 = ref("");
+const filterOptions = [
+  { value: "selected", label: "Selected" },
+  { value: "unselected", label: "Unselected" },
+  { value: "hover", label: "Hover" },
+];
 
 function onChanged(val: string | number | null) {
   window.console.log("เปลี่ยนเป็น:" + val);
@@ -391,7 +411,137 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </div>
       </div>
     </div>
-  </MainWithNarbar>
+  
+          <CardRequest
+            title="ล้างแอร์"
+            date-str="25/04/2563"
+            time="13.00"
+            service-name="ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง"
+            order-id="AD04071205"
+            price="1,550.00"
+            location="444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ"
+            @accept="handleAcceptRequest"
+            @reject="handleRejectRequest"
+            @view-map="handleViewMap"
+          />
+      
+
+    <div class="p-8 max-w-5xl mx-auto bg-white">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <section>
+          <h3 class="style-headline-4 text-gray-950 mb-6">Radio Button</h3>
+          <div class="flex flex-col">
+            <RadioButton
+              v-model="radio1"
+              value="default"
+              label="Default"
+              name="radio1"
+            />
+            <RadioButton
+              v-model="radio1"
+              value="hover"
+              label="Hover"
+              name="radio1"
+            />
+            <RadioButton
+              v-model="radio1"
+              value="selected"
+              label="Selected"
+              name="radio1"
+            />
+            <RadioButton
+              value="disabled"
+              label="Disable"
+              name="radio1"
+              disabled
+            />
+          </div>
+        </section>
+
+        <section>
+          <h3 class="style-headline-4 text-gray-950 mb-6">
+            Radio Button with Input
+          </h3>
+          <div class="flex flex-col">
+            <RadioButtonWithInput
+              v-model="radioInput1"
+              v-model:input-value="inputText1"
+              value="default"
+              label="Default"
+              name="radio-input1"
+            />
+            <RadioButtonWithInput
+              v-model="radioInput1"
+              v-model:input-value="inputText2"
+              value="hover"
+              label="Hover"
+              name="radio-input1"
+            />
+            <RadioButtonWithInput
+              v-model="radioInput1"
+              v-model:input-value="inputText3"
+              value="selected"
+              label="Selected"
+              name="radio-input1"
+            />
+            <RadioButtonWithInput
+              value="disabled"
+              label="Disable"
+              name="radio-input1"
+              disabled
+            />
+          </div>
+        </section>
+
+        <section>
+          <h3 class="style-headline-4 text-gray-950 mb-6">Checkbox</h3>
+          <div class="flex flex-col">
+            <Checkbox v-model="checkbox1" label="Default" />
+            <Checkbox v-model="checkbox2" label="Hover" />
+            <Checkbox v-model="checkbox3" label="Selected" />
+            <Checkbox
+              :model-value="false"
+              label="Disable"
+              disabled
+            />
+          </div>
+        </section>
+      </div>
+
+      <section class="mt-12">
+        <h3 class="style-headline-4 text-gray-950 mb-6">Select Box</h3>
+        <div class="flex gap-4 flex-wrap">
+          <SelectBox
+            v-model="selectBox1"
+            value="default"
+            label="Default"
+          />
+          <SelectBox
+            v-model="selectBox1"
+            value="hover"
+            label="Hover"
+          />
+          <SelectBox
+            v-model="selectBox1"
+            value="selected"
+            label="Selected"
+          />
+        </div>
+      </section>
+
+      <section class="mt-12">
+        <h3 class="style-headline-4 text-gray-950 mb-6">Select Filter</h3>
+        <div class="flex gap-6 flex-wrap">
+          <SelectFilter
+            v-model="filter1"
+            :options="filterOptions"
+            label="Default"
+            placeholder="Selected"
+          />
+        </div>
+      </section>
+    </div>
+</MainWithNarbar>
 </template>
 
 <style scoped>
