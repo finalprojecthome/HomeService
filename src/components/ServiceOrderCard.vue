@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import Badge from './ui/Badge.vue';
-import Button from './ui/Button-card.vue';
+import ActionButton from './ui/ActionButton.vue';
 import Icon from './ui/Icon.vue';
+import { UserIcon } from './icons/icons';
 
 export type OrderStatus = 'pending' | 'in-progress' | 'completed' | 'canceled';
 type BadgeVariant = 'blue' | 'purple' | 'green' | 'yellow' | 'gray';
@@ -36,7 +37,6 @@ const getStatusVariant = (status: OrderStatus): BadgeVariant => {
 };
 
 const calendarIconPath = "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5";
-const userIconPath = "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z";
 </script>
 
 <template>
@@ -48,31 +48,39 @@ const userIconPath = "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 2
     </div>
 
     <div class="flex-1 w-full">
-      <div class="flex justify-between items-start mb-6 pt-1">
-        <h3 class="text-[22px] font-bold text-gray-900 leading-none">{{ orderId }}</h3>
-        <div class="flex items-center gap-3">
-          <span class="text-[15px] text-gray-500">สถานะ:</span>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 sm:mb-6 pt-1 gap-3 sm:gap-0">
+        <h3 class="text-xl sm:text-[22px] font-bold text-gray-900 leading-none">คำสั่งการซ่อมรหัส : {{ orderId }}</h3>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span class="text-[14px] sm:text-[15px] text-gray-500">สถานะ:</span>
           <Badge :variant="getStatusVariant(status)">{{ statusLabel || status }}</Badge>
         </div>
       </div>
 
-      <div class="space-y-4 mb-8">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-          <div class="flex items-center gap-3 text-[15px] text-gray-500">
-            <Icon :path="calendarIconPath" class="text-gray-400" /> 
+      <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8 text-[14px] sm:text-[15px]">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="flex items-center gap-2 sm:gap-3 text-gray-500">
+            <Icon :path="calendarIconPath" class="text-gray-400 w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" /> 
             <span>วันเวลาดำเนินการ: <span class="text-gray-700">{{ date }}</span></span>
           </div>
-          <div class="flex items-center gap-3">
+          <!-- Desktop Price (Hidden on mobile) -->
+          <div class="hidden sm:flex items-center gap-3">
             <span class="text-[15px] text-gray-500">ราคารวม:</span>
-            <span class="text-lg font-bold text-gray-900">฿ {{ price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+            <span class="text-lg font-bold text-gray-900">{{ price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} ฿</span>
           </div>
         </div>
         
-        <div class="flex items-center gap-3 text-[15px] text-gray-500">
-          <Icon :path="userIconPath" class="text-gray-400" /> 
+        <div class="flex items-center gap-2 sm:gap-3 text-gray-500">
+          <UserIcon class="text-gray-400 w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" /> 
           <span>พนักงาน: <span class="text-gray-700">{{ staff }}</span></span>
         </div>
+        
+        <!-- Mobile Price (Visible only on mobile, below Staff) -->
+        <div class="flex sm:hidden items-center gap-2 sm:gap-3">
+          <span class="text-[14px] sm:text-[15px] text-gray-500">ราคารวม:</span>
+          <span class="font-bold text-gray-900">{{ price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} ฿</span>
+        </div>
       </div>
+
 
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5">
         <div>
@@ -82,9 +90,9 @@ const userIconPath = "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 2
           </ul>
         </div>
         
-        <Button variant="outline" @click="emit('action-click')" class="w-full sm:w-auto mt-2 sm:mt-0 text-center flex justify-center">
+        <ActionButton variant="primary" @click="emit('action-click')" class="w-full sm:w-auto mt-2 sm:mt-0">
           ดูรายละเอียด
-        </Button>
+        </ActionButton>
       </div>
     </div>
   </div>

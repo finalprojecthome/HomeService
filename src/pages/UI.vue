@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import ProductCard from "../components/ProductCard.vue";
-import OrderCard from "../components/OrderCard.vue";
+import ProductCard from "../components/ui/ProductCard.vue";
+import OrderCard from "../components/ui/OrderCard.vue";
+import ServiceCard from "../components/ServiceCard.vue";
+import ServiceOrderCard from "../components/ServiceOrderCard.vue";
+import OrderSummary from "../components/OrderSummary.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import Dropdown, { type DropdownOption } from "../components/ui/Dropdown.vue";
@@ -332,6 +335,52 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
             staff="สมาน ไมตรี"
             :price="800"
             :items="['ทำความสะอาดทั่วไป']"
+          />
+        </section>
+      </div>
+
+      <!-- New Components Section -->
+      <div class="max-w-5xl mx-auto mt-12 space-y-12">
+        <h2 class="style-headline-2 border-b pb-4">New UI Components (Service Cards & Order Summary)</h2>
+        
+        <section class="space-y-6">
+          <h3 class="style-headline-3">ServiceCard</h3>
+          <ServiceCard
+            imageSrc="https://izmkosofgpuwlopleptv.supabase.co/storage/v1/object/public/user-assets/87eb79fc-f79b-43b3-828b-76b6c845409e-20260328082723.jpeg"
+            category="บริการทั่วไป"
+            categoryVariant="blue"
+            title="ทำความสะอาดทั่วไป"
+            price="500.00 - 1,000.00"
+            ctaText="เลือกบริการ"
+          />
+        </section>
+
+        <section class="space-y-6">
+          <h3 class="style-headline-3">ServiceOrderCard</h3>
+          <p class="text-sm text-gray-500 mb-4">Responsive Element: Resize window to see Mobile layout.</p>
+          <ServiceOrderCard
+            orderId="AD04071205"
+            status="pending"
+            statusLabel="รอดำเนินการ"
+            date="25/04/2563 เวลา 13.00 น."
+            staff="สมาน ไมตรี"
+            :price="1550"
+            :items="['ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง']"
+          />
+        </section>
+
+        <section class="space-y-6">
+          <h3 class="style-headline-3">OrderSummary</h3>
+          <OrderSummary
+            :items="[
+              { name: '9,000 - 18,000 BTU, แบบติดผนัง', quantity: 2 },
+              { name: '9,000 - 18,000 BTU, แบบติดผนัง', quantity: 2 }
+            ]"
+            date="23 เม.ย. 2022"
+            time="11.00 น."
+            location="444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ"
+            :discount="50"
+            :totalPrice="1550"
           />
         </section>
       </div>
