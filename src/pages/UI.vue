@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ProductCard from "../components/ProductCard.vue";
-import OrderCard from "../components/OrderCard.vue";
+import ProductCard from "../components/ui/ProductCard.vue";
+import OrderCard from "../components/ui/OrderCard.vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import Dropdown, { type DropdownOption } from "../components/ui/Dropdown.vue";
