@@ -22,6 +22,8 @@ import {
   History,
   Logout,
   NotificationIcon,
+  DetailIcon,
+  CheckedCard,
 } from "../components/icons";
 import Sidebar from "../components/Sidebar.vue";
 import CardRequest from "../components/CardRequest.vue";
@@ -29,6 +31,9 @@ import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import Skeleton from "../components/ui/Skeleton.vue";
 import Avatar from "../components/ui/Avatar.vue";
 import { Pencil } from "../components/icons/icons";
+import Stepper from "../components/Stepper.vue";
+import StateList from "../components/StateList.vue";
+import FilterBar from "../components/FilterBar.vue";
 
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
@@ -61,6 +66,37 @@ const filterOptions = [
   { value: "selected", label: "Selected" },
   { value: "unselected", label: "Unselected" },
   { value: "hover", label: "Hover" },
+];
+
+// Demo Stepper / StateList / FilterBar
+const steps = [
+  { id: "services", label: "รายการ", icon: DetailIcon },
+  { id: "detail", label: "กรอกข้อมูลบริการ", icon: Pencil },
+  { id: "pay", label: "ชำระเงิน", icon: CheckedCard },
+];
+const activeStepIndex = ref(-1);
+
+const query = ref("");
+const service = ref("");
+const price = ref("");
+const sort = ref("");
+
+const serviceOptions = [
+  { value: "", label: "ทั้งหมด" },
+  { value: "cleaning", label: "ทำความสะอาด" },
+  { value: "repair", label: "ซ่อมบำรุง" },
+];
+
+const priceOptions = [
+  { value: "", label: "ทุกช่วงราคา" },
+  { value: "0-2000", label: "0-2000฿" },
+  { value: "2001-5000", label: "2001-5000฿" },
+];
+
+const sortOptions = [
+  { value: "", label: "ตรงตัวอัก..." },
+  { value: "exact", label: "ตรงตัวอัก..." },
+  { value: "recent", label: "ล่าสุด" },
 ];
 
 function onChanged(val: string | number | null) {
@@ -547,6 +583,34 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
       <h1 class="style-headline-3 mb-4">Payment Selection</h1>
       <section class="mt-12">
         <PaymentSelection v-model="paymentMethod" />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Stepper</h2>
+        <Stepper
+          :steps="steps"
+          :active-index="activeStepIndex"
+          @change="activeStepIndex = $event"
+        />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">State List</h2>
+        <StateList :items="steps" :active-index="activeStepIndex" />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Filter Bar</h2>
+        <FilterBar
+          v-model:query="query"
+          v-model:service="service"
+          v-model:price="price"
+          v-model:sort="sort"
+          :service-options="serviceOptions"
+          :price-options="priceOptions"
+          :sort-options="sortOptions"
+          @search="(v) => console.log('filter bar search', v)"
+        />
       </section>
     </div>
       
