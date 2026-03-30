@@ -39,6 +39,7 @@ import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
 import QuantityList from "../components/QuantityList.vue";
 
+const bookingDate = ref<string | null>(null);
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
   alert("Submit Form\n\nYes, it's submit form button\n\nเชื่อเถอะ");
