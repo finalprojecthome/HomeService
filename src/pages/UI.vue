@@ -34,6 +34,7 @@ import { Pencil } from "../components/icons/icons";
 import Stepper from "../components/Stepper.vue";
 import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
+import QuantityList from "../components/QuantityList.vue";
 
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
@@ -75,6 +76,24 @@ const steps = [
   { id: "pay", label: "ชำระเงิน", icon: CheckedCard },
 ];
 const activeStepIndex = ref(-1);
+
+// Demo: Quantity list (like screenshot)
+const quantityListItems = [
+  {
+    id: "wall",
+    title: "9,000 - 18,000 BTU, แบบติดผนัง",
+    pricePerUnit: 800,
+    unitLabel: "เครื่อง",
+  },
+  {
+    id: "ceiling",
+    title: "9,000 - 18,000 BTU, แบบฝังฝ้า",
+    pricePerUnit: 800,
+    unitLabel: "เครื่อง",
+  },
+];
+
+const quantityListQuantities = ref<number[]>([0, 0]);
 
 const query = ref("");
 const service = ref("");
@@ -597,6 +616,15 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
       <section class="mt-12">
         <h2 class="style-headline-3 mb-4">State List</h2>
         <StateList :items="steps" :active-index="activeStepIndex" />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Quantity List</h2>
+        <QuantityList
+          title="เลือกจำนวนเครื่อง"
+          :items="quantityListItems"
+          v-model="quantityListQuantities"
+        />
       </section>
 
       <section class="mt-12">
