@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<{
   category: string;
   categoryVariant?: CategoryVariant;
   title: string;
-  price: number;
+  price: number | string;
   ctaText?: string;
 }>(), {
   categoryVariant: 'blue',
@@ -20,7 +20,6 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   (e: 'cta-click'): void
 }>();
-
 
 </script>
 
@@ -38,7 +37,7 @@ const emit = defineEmits<{
       
       <div class="flex items-center gap-1.5 text-[15px] text-gray-500 mb-2">
         <TagIcon class="w-[18px] h-[18px] text-gray-400" /> 
-        <span>{{ price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} ฿</span>
+        <span>{{ typeof price === 'number' ? price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : price }} ฿</span>
       </div>
       
       <ActionButton variant="ghost" @click="emit('cta-click')" class="mt-2 p-0">
