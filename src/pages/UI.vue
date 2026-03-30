@@ -39,7 +39,9 @@ import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
 import QuantityList from "../components/QuantityList.vue";
 import DatePicker from "../components/ui/DatePicker.vue";
+import TimePicker from "../components/ui/TimePicker.vue";
 
+const bookingTime = ref<string | null>(null);
 const bookingDate = ref<string | null>(null);
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
@@ -388,6 +390,8 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </section>
       </div>
 
+
+
       <div class="px-8 py-12 max-w-5xl mx-auto flex flex-col gap-12">
         <!-- Row 1: Dropdowns -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -409,8 +413,12 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
             />
           </div>
         </div>
-        <div class="max-w-sm">
+        <div class="max-w-sm flex gap-100">
           <DatePicker v-model="bookingDate" />
+        </div>
+        <div class="max-w-sm">
+        <TimePicker v-model="bookingTime" />
+        <p class="mt-3 text-sm text-gray-600">Selected time: {{ bookingTime }}</p>
         </div>
 
         <!-- Row 2: Image Upload -->
