@@ -11,6 +11,7 @@ import RadioButtonWithInput from "../components/ui/RadioButtonWithInput.vue";
 import Checkbox from "../components/ui/Checkbox.vue";
 import SelectBox from "../components/ui/SelectBox.vue";
 import SelectFilter from "../components/ui/SelectFilter.vue";
+import PaymentSelection from "../components/PaymentSelection.vue";
 import { debounce } from "../utils/debounce";
 import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
@@ -21,6 +22,8 @@ import {
   History,
   Logout,
   NotificationIcon,
+  DetailIcon,
+  CheckedCard,
 } from "../components/icons";
 import Sidebar from "../components/Sidebar.vue";
 import CardRequest from "../components/CardRequest.vue";
@@ -28,6 +31,10 @@ import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import Skeleton from "../components/ui/Skeleton.vue";
 import Avatar from "../components/ui/Avatar.vue";
 import { Pencil } from "../components/icons/icons";
+import Stepper from "../components/Stepper.vue";
+import StateList from "../components/StateList.vue";
+import FilterBar from "../components/FilterBar.vue";
+import QuantityList from "../components/QuantityList.vue";
 
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
@@ -54,11 +61,61 @@ const checkbox1 = ref(false);
 const checkbox2 = ref(false);
 const checkbox3 = ref(true);
 const selectBox1 = ref("selected");
+const paymentMethod = ref("qr");
 const filter1 = ref("");
 const filterOptions = [
   { value: "selected", label: "Selected" },
   { value: "unselected", label: "Unselected" },
   { value: "hover", label: "Hover" },
+];
+
+// Demo Stepper / StateList / FilterBar
+const steps = [
+  { id: "services", label: "รายการ", icon: DetailIcon },
+  { id: "detail", label: "กรอกข้อมูลบริการ", icon: Pencil },
+  { id: "pay", label: "ชำระเงิน", icon: CheckedCard },
+];
+const activeStepIndex = ref(-1);
+
+// Demo: Quantity list (like screenshot)
+const quantityListItems = [
+  {
+    id: "wall",
+    title: "9,000 - 18,000 BTU, แบบติดผนัง",
+    pricePerUnit: 800,
+    unitLabel: "เครื่อง",
+  },
+  {
+    id: "ceiling",
+    title: "9,000 - 18,000 BTU, แบบฝังฝ้า",
+    pricePerUnit: 800,
+    unitLabel: "เครื่อง",
+  },
+];
+
+const quantityListQuantities = ref<number[]>([0, 0]);
+
+const query = ref("");
+const service = ref("");
+const price = ref("");
+const sort = ref("");
+
+const serviceOptions = [
+  { value: "", label: "ทั้งหมด" },
+  { value: "cleaning", label: "ทำความสะอาด" },
+  { value: "repair", label: "ซ่อมบำรุง" },
+];
+
+const priceOptions = [
+  { value: "", label: "ทุกช่วงราคา" },
+  { value: "0-2000", label: "0-2000฿" },
+  { value: "2001-5000", label: "2001-5000฿" },
+];
+
+const sortOptions = [
+  { value: "", label: "ตรงตัวอัก..." },
+  { value: "exact", label: "ตรงตัวอัก..." },
+  { value: "recent", label: "ล่าสุด" },
 ];
 
 function onChanged(val: string | number | null) {
@@ -541,6 +598,51 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </div>
       </section>
     </div>
+    <div class="p-8 max-w-5xl mx-auto">
+      <h1 class="style-headline-3 mb-4">Payment Selection</h1>
+      <section class="mt-12">
+        <PaymentSelection v-model="paymentMethod" />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Stepper</h2>
+        <Stepper
+          :steps="steps"
+          :active-index="activeStepIndex"
+          @change="activeStepIndex = $event"
+        />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">State List</h2>
+        <StateList :items="steps" :active-index="activeStepIndex" />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Quantity List</h2>
+        <QuantityList
+          title="เลือกจำนวนเครื่อง"
+          :items="quantityListItems"
+          v-model="quantityListQuantities"
+        />
+      </section>
+
+      <section class="mt-12">
+        <h2 class="style-headline-3 mb-4">Filter Bar</h2>
+        <FilterBar
+          v-model:query="query"
+          v-model:service="service"
+          v-model:price="price"
+          v-model:sort="sort"
+          :service-options="serviceOptions"
+          :price-options="priceOptions"
+          :sort-options="sortOptions"
+          @search="(v) => console.log('filter bar search', v)"
+        />
+      </section>
+    </div>
+      
+    
 </MainWithNarbar>
 </template>
 
