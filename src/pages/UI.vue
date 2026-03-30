@@ -11,6 +11,7 @@ import RadioButtonWithInput from "../components/ui/RadioButtonWithInput.vue";
 import Checkbox from "../components/ui/Checkbox.vue";
 import SelectBox from "../components/ui/SelectBox.vue";
 import SelectFilter from "../components/ui/SelectFilter.vue";
+import PaymentSelection from "../components/PaymentSelection.vue";
 import { debounce } from "../utils/debounce";
 import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
@@ -54,6 +55,7 @@ const checkbox1 = ref(false);
 const checkbox2 = ref(false);
 const checkbox3 = ref(true);
 const selectBox1 = ref("selected");
+const paymentMethod = ref("qr");
 const filter1 = ref("");
 const filterOptions = [
   { value: "selected", label: "Selected" },
@@ -541,6 +543,14 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </div>
       </section>
     </div>
+    <div class="p-8 max-w-5xl mx-auto">
+      <h1 class="style-headline-3 mb-4">Payment Selection</h1>
+      <section class="mt-12">
+        <PaymentSelection v-model="paymentMethod" />
+      </section>
+    </div>
+      
+    
 </MainWithNarbar>
 </template>
 
