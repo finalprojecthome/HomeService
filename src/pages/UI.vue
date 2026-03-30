@@ -4,7 +4,7 @@ import OrderCard from "../components/ui/OrderCard.vue";
 import ServiceCard from "../components/ServiceCard.vue";
 import ServiceOrderCard from "../components/ServiceOrderCard.vue";
 import OrderSummary from "../components/OrderSummary.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import Dropdown, { type DropdownOption } from "../components/ui/Dropdown.vue";
 import PriceRange from "../components/ui/PriceRange.vue";
@@ -40,9 +40,40 @@ import FilterBar from "../components/FilterBar.vue";
 import QuantityList from "../components/QuantityList.vue";
 import DatePicker from "../components/ui/DatePicker.vue";
 import TimePicker from "../components/ui/TimePicker.vue";
+import Breadcrumb, { type BreadcrumbItem } from "../components/ui/Breadcrumb.vue";
 
 const bookingTime = ref<string | null>(null);
 const bookingDate = ref<string | null>(null);
+const selectedService = ref<string | null>(null);
+
+const selectServiceDemo = (serviceName: string) => {
+  selectedService.value = serviceName;
+};
+
+const resetSelectedServiceDemo = () => {
+  selectedService.value = null;
+};
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+  {
+    label: "บริการของเรา",
+    clickable: !!selectedService.value,
+    active: !selectedService.value,
+  },
+  ...(selectedService.value
+    ? [
+        {
+          label: selectedService.value,
+          active: true,
+        },
+      ]
+    : []),
+]);
+
+const handleBreadcrumbNavigate = (index: number) => {
+  if (index === 0) {
+    resetSelectedServiceDemo();
+  }
+};
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
   alert("Submit Form\n\nYes, it's submit form button\n\nเชื่อเถอะ");
@@ -343,6 +374,44 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           />
         </section>
       </div>
+      <!-- Breadcrumb Section -->
+      <section class="w-full max-w-5xl mx-auto space-y-6">
+        <h2 class="style-headline-2 border-b pb-4">Breadcrumb</h2>
+
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <p class="style-body-2 text-gray-500">Size: md</p>
+            <Breadcrumb
+              :items="breadcrumbItems"
+              size="md"
+              @navigate="handleBreadcrumbNavigate"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <p class="style-body-2 text-gray-500">Size: sm</p>
+            <Breadcrumb
+              :items="breadcrumbItems"
+              size="sm"
+              @navigate="handleBreadcrumbNavigate"
+            />
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <ActionButton @click="selectServiceDemo('ล้างแอร์')">
+              ล้างแอร์
+            </ActionButton>
+
+            <ActionButton variant="secondary" @click="selectServiceDemo('ซ่อมแอร์')">
+              ซ่อมแอร์
+            </ActionButton>
+
+            <ActionButton variant="ghost" @click="resetSelectedServiceDemo">
+              Reset
+            </ActionButton>
+          </div>
+        </div>
+      </section>
 
       <!-- New Components Section -->
       <div class="max-w-5xl mx-auto mt-12 space-y-12">
