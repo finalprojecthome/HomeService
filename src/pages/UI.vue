@@ -38,6 +38,7 @@ import Stepper from "../components/Stepper.vue";
 import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
 import QuantityList from "../components/QuantityList.vue";
+import DatePicker from "../components/ui/DatePicker.vue";
 
 const bookingDate = ref<string | null>(null);
 const handleClickButton = () => alert("Pressed Button");
@@ -177,6 +178,7 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
 </script>
 
 <template>
+
   <!-- Main with Narbar -->
   <MainWithNarbar>
     <div
@@ -406,6 +408,9 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
               @change="onChanged"
             />
           </div>
+        </div>
+        <div class="max-w-sm">
+          <DatePicker v-model="bookingDate" />
         </div>
 
         <!-- Row 2: Image Upload -->
