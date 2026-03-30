@@ -30,7 +30,7 @@ import CardRequest from "../components/CardRequest.vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import Skeleton from "../components/ui/Skeleton.vue";
 import Avatar from "../components/ui/Avatar.vue";
-import { Pencil } from "../components/icons/icons";
+import { NotificationFilledIcon, Pencil } from "../components/icons/icons";
 import Stepper from "../components/Stepper.vue";
 import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
@@ -238,6 +238,15 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           </ActionButton>
           <ActionButton variant="ghost" @click="handleClickButton" disabled>
             Button Ghost
+          </ActionButton>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <ActionButton variant="icon" @click="handleClickButton">
+            <NotificationFilledIcon />
+          </ActionButton>
+          <ActionButton variant="icon" @click="handleClickButton" disabled>
+            <NotificationFilledIcon />
           </ActionButton>
         </div>
 
@@ -468,20 +477,19 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </div>
       </div>
     </div>
-  
-          <CardRequest
-            title="ล้างแอร์"
-            date-str="25/04/2563"
-            time="13.00"
-            service-name="ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง"
-            order-id="AD04071205"
-            price="1,550.00"
-            location="444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ"
-            @accept="handleAcceptRequest"
-            @reject="handleRejectRequest"
-            @view-map="handleViewMap"
-          />
-      
+
+    <CardRequest
+      title="ล้างแอร์"
+      date-str="25/04/2563"
+      time="13.00"
+      service-name="ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง"
+      order-id="AD04071205"
+      price="1,550.00"
+      location="444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ"
+      @accept="handleAcceptRequest"
+      @reject="handleRejectRequest"
+      @view-map="handleViewMap"
+    />
 
     <div class="p-8 max-w-5xl mx-auto bg-white">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -556,11 +564,7 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
             <Checkbox v-model="checkbox1" label="Default" />
             <Checkbox v-model="checkbox2" label="Hover" />
             <Checkbox v-model="checkbox3" label="Selected" />
-            <Checkbox
-              :model-value="false"
-              label="Disable"
-              disabled
-            />
+            <Checkbox :model-value="false" label="Disable" disabled />
           </div>
         </section>
       </div>
@@ -568,21 +572,9 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
       <section class="mt-12">
         <h3 class="style-headline-4 text-gray-950 mb-6">Select Box</h3>
         <div class="flex gap-4 flex-wrap">
-          <SelectBox
-            v-model="selectBox1"
-            value="default"
-            label="Default"
-          />
-          <SelectBox
-            v-model="selectBox1"
-            value="hover"
-            label="Hover"
-          />
-          <SelectBox
-            v-model="selectBox1"
-            value="selected"
-            label="Selected"
-          />
+          <SelectBox v-model="selectBox1" value="default" label="Default" />
+          <SelectBox v-model="selectBox1" value="hover" label="Hover" />
+          <SelectBox v-model="selectBox1" value="selected" label="Selected" />
         </div>
       </section>
 
@@ -641,9 +633,7 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         />
       </section>
     </div>
-      
-    
-</MainWithNarbar>
+  </MainWithNarbar>
 </template>
 
 <style scoped>

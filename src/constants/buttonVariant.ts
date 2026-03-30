@@ -25,7 +25,12 @@ export const variants: Record<ButtonVariant, string> = {
     "active:text-blue-800",
     "disabled:text-gray-400",
   ),
-  icon: "",
+  icon: cn(
+    "size-10 text-gray-600 bg-gray-100 rounded-full",
+    "hover:bg-gray-200",
+    "active:bg-gray-300",
+    "disabled:text-gray-400 disabled:bg-gray-100",
+  ),
 };
 
 export const sizes: Record<ButtonSize, string> = {
