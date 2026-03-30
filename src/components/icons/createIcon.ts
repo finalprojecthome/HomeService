@@ -1,6 +1,6 @@
 import { h, type VNode, type Component } from "vue";
 
-export function createIcon(paths: any): Component {
+export function createIcon(paths: any, viewBox = "0 0 24 24"): Component {
   return {
     name: "Icon",
     props: {
@@ -10,7 +10,7 @@ export function createIcon(paths: any): Component {
       return h(
         "svg",
         {
-          viewBox: "0 0 24 24",
+          viewBox,
           width: this.size,
           height: this.size,
           fill: "none",

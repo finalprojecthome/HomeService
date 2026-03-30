@@ -19,6 +19,13 @@ import {
 } from "../components/icons";
 import Sidebar from "../components/Sidebar.vue";
 import CardRequest from "../components/CardRequest.vue";
+import * as Icons from "../components/icons";
+
+const iconsMap = Icons;
+
+function copyIcon(name: string) {
+  navigator.clipboard.writeText(`import { ${name} } from "@/components/icons";`);
+}
 
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
@@ -350,6 +357,24 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
       </div>
     </div>
   </div>
+  <!-- Row 7: Icon Gallery -->
+<div>
+  <h3 class="style-headline-3 mb-4">Icon Gallery</h3>
+
+  <div class="grid grid-cols-4 md:grid-cols-8 gap-4">
+    <div
+      v-for="(Icon, name) in iconsMap"
+      :key="name"
+      class="flex flex-col items-center gap-2 p-3 border rounded-lg hover:shadow cursor-pointer"
+      @click="copyIcon(name)"
+    >
+      <component :is="Icon" class="w-5 h-5 text-gray-700" />
+      <span class="text-xs text-gray-500 text-center">
+        {{ name }}
+      </span>
+    </div>
+  </div>
+</div>
 </template>
 
 <style scoped>
