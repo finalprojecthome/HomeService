@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Badge from './ui/Badge.vue';
-import ActionButton from './ui/ActionButton.vue';
+import Badge from './Badge.vue';
+import ActionButton from './ActionButton.vue';
 import { TagIcon } from '../icons/icons';
 
 type CategoryVariant = 'blue' | 'purple' | 'green' | 'yellow' | 'gray';

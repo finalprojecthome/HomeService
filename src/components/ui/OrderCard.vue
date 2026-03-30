@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Badge from './ui/Badge.vue';
-import ActionButton from './ui/ActionButton.vue';
-import Icon from './ui/Icon.vue';
+import Badge from './Badge.vue';
+import ActionButton from './ActionButton.vue';
+import Icon from './Icon.vue';
 import { UserIcon } from '../icons/icons';
 
 export type OrderStatus = 'pending' | 'in-progress' | 'completed' | 'canceled';
