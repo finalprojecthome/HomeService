@@ -112,7 +112,7 @@ const priceDropdownOpen = ref(false);
 const priceDropdownRef = ref<HTMLElement>();
 
 const priceDisplayText = computed(
-  () => `${priceRangeProxy.value[0]}-${priceRangeProxy.value[1]}${props.priceCurrency}`,
+  () => `${priceRangeProxy.value[0]} - ${priceRangeProxy.value[1]} ${props.priceCurrency}`,
 );
 
 function togglePriceDropdown() {
@@ -204,10 +204,10 @@ function submitSearch() {
 
         <button
           type="button"
-          class="w-full h-[42px] px-3 border border-gray-300 rounded-full bg-white flex items-center gap-2 transition-colors hover:bg-gray-100"
+          class="w-full h-[42px] px-3  rounded-full bg-white flex items-center gap-2 transition-colors hover:bg-gray-100"
           @click="togglePriceDropdown"
         >
-          <span class="flex-1 text-left style-headline-5 text-gray-950">
+          <span class="flex-1 text-left style-body-2 text-black font-medium">
             {{ priceDisplayText }}
           </span>
           <svg

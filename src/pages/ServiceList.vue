@@ -112,18 +112,17 @@ const serviceItems = [
   <MainWithNarbar>
     <div class="min-h-screen bg-[#F3F4F6]">
       <section
-        class="relative h-[200px] bg-cover bg-center"
+        class="relative h-[240px] bg-cover bg-center"
         :style="{ backgroundImage: `url(${heroBgSrc})` }"
       >
         <div class="absolute inset-0 bg-[#112A5A]/55"></div>
         <div
           class="relative z-10 h-full max-w-6xl mx-auto px-4 md:px-8 flex flex-col items-center justify-center text-center text-white"
         >
-          <h1 class="style-headline-2 text-white">บริการของเรา</h1>
-          <p class="style-body-3 mt-3 text-blue-100">
-            ร่วมเลือกซื้อได้ทันที มอบความสะดวกสบายให้บ้าน สะดวกขึ้น จึงเหมาะมาก
-            <br />
-            โดยพนักงานแม่บ้าน และช่างมืออาชีพ
+          <h1 class="style-headline-1 text-white">บริการของเรา</h1>
+          <p class="style-body-1 mt-3 text-blue-100">
+            ซ่อมเครื่องใช้ไฟฟ้า ซ่อมแอร์ ทำความสะอาดบ้าน และอื่น ๆ อีกมากมาย <br>
+โดยพนักงานแม่บ้าน และช่างมืออาชีพ
           </p>
         </div>
       </section>
@@ -152,7 +151,7 @@ const serviceItems = [
       </section>
 
       <section class="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ">
           <ServiceCard
             v-for="(item, index) in serviceItems"
             :key="index"
@@ -162,7 +161,7 @@ const serviceItems = [
             :price="item.price"
             :imageSrc="item.imageSrc"
             ctaText="เลือกบริการ"
-            class="max-w-none"
+            class="cursor-pointer hover:scale-105 transition-all duration-300"
           />
         </div>
       </section>

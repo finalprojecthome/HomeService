@@ -90,7 +90,7 @@ onBeforeUnmount(() =>
           :class="
             cn(
               'flex-1 text-left px-3 py-2 truncate',
-              modelValue ? 'style-headline-5 text-gray-950' : 'style-body-2 text-gray-500'
+              modelValue ? 'style-headline-5 text-gray-950' : 'style-body-2 text-black font-medium'
             )
           "
         >
