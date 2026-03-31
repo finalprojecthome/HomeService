@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import Badge from './ui/Badge.vue';
 import ActionButton from './ui/ActionButton.vue';
 import { TagIcon } from './icons/icons';
@@ -17,6 +18,20 @@ const props = withDefaults(defineProps<{
   ctaText: 'เลือกบริการ', // ตาม Figma
 });
 
+const imageLoadError = ref(false);
+
+watch(
+  () => props.imageSrc,
+  () => {
+    imageLoadError.value = false;
+  },
+);
+
+const onImgError = () => {
+  // Avoid flipping back/forth if fallback also errors.
+  if (!imageLoadError.value) imageLoadError.value = true;
+};
+
 const emit = defineEmits<{
   (e: 'cta-click'): void
 }>();
@@ -26,10 +41,25 @@ const emit = defineEmits<{
 
 <template>
   <div class="style-card-box style-shadow overflow-hidden w-full max-w-[320px] flex flex-col">
-    <div v-if="imageSrc" class="h-[190px] w-full bg-gray-100 overflow-hidden">
-      <img :src="imageSrc" :alt="title" class="w-full h-full object-cover" />
+    <div
+      v-if="imageSrc && !imageLoadError"
+      class="h-[190px] w-full bg-gray-100 overflow-hidden"
+    >
+      <img
+        :src="imageSrc"
+        :alt="title"
+        class="w-full h-full object-cover"
+        @error="onImgError"
+      />
     </div>
-    <div v-else class="bg-[#DCE6FF] h-[190px] w-full"></div>
+
+    <!-- Placeholder: gray background + icon -->
+    <div
+      v-else
+      class="h-[190px] w-full bg-gray-100 overflow-hidden flex items-center justify-center"
+    >
+      <!-- intentionally no icon: placeholder is only background -->
+    </div>
     
     <div class="p-5 flex flex-col items-start gap-4">
       <Badge :variant="categoryVariant">{{ category }}</Badge>

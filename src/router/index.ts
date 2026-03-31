@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../pages/Home.vue'
 import UI from '../pages/UI.vue'
+import ServiceList from '../pages/ServiceList.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: '/ui',
       name: 'ui',
       component: UI
+    },
+    {
+      path: '/services',
+      name: 'services',
+      component: ServiceList
     }
   ]
 })
