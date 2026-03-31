@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, type ButtonHTMLAttributes } from "vue";
-import { RouterLink } from "vue-router";
+import { computed } from "vue";
+import { RouterLink, type RouterLinkProps } from "vue-router";
 import {
   baseStyle,
   sizes,
@@ -11,10 +11,10 @@ import {
 import cn from "../../utils/cn";
 
 interface ButtonProps {
-  to: `/${string}`;
+  to: RouterLinkProps["to"];
   variant?: ButtonVariant;
   size?: ButtonSize;
-  disabled?: ButtonHTMLAttributes["disabled"];
+  disabled?: boolean;
   class?: string;
 }
 
