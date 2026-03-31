@@ -38,6 +38,7 @@ import Stepper from "../components/Stepper.vue";
 import StateList from "../components/StateList.vue";
 import FilterBar from "../components/FilterBar.vue";
 import QuantityList from "../components/QuantityList.vue";
+import Input from "../components/ui/Input.vue";
 import DatePicker from "../components/ui/DatePicker.vue";
 import TimePicker from "../components/ui/TimePicker.vue";
 import Breadcrumb, { type BreadcrumbItem } from "../components/ui/Breadcrumb.vue";
@@ -338,6 +339,37 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           alt="User Avatar"
           :fallback-icon="Pencil"
           class="size-40"
+        />
+      </div>
+
+      <!-- Input -->
+      <h1 class="style-headline-1">Input</h1>
+      <div class="flex flex-col items-center gap-4">
+        <Input name="input" placeholder="Place Holder" />
+        <Input
+          name="input-placeholder"
+          value="Default Value"
+          placeholder="Place Holder"
+        />
+        <Input
+          name="input-error"
+          value="Error Input"
+          placeholder="Place Holder"
+          :isError="true"
+        />
+        <Input name="input-disabled" placeholder="Place Holder" disabled />
+        <Input
+          name="input-adjust-size"
+          value="Adjust Size"
+          placeholder="Place Holder"
+          class="w-100"
+        />
+        <Input
+          name="input-adjust-size-error"
+          value="Adjust Size But Error"
+          placeholder="Place Holder"
+          class="w-125"
+          :isError="true"
         />
       </div>
 

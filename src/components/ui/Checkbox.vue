@@ -12,7 +12,7 @@ const props = withDefaults(
     modelValue: false,
     label: "",
     disabled: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -29,7 +29,7 @@ function toggle() {
     :class="
       cn(
         'inline-flex items-center gap-3 py-2 cursor-pointer select-none group/check',
-        disabled && 'cursor-not-allowed'
+        disabled && 'cursor-not-allowed',
       )
     "
     :style="{ '--c-primary': PRIMARY }"
@@ -48,11 +48,9 @@ function toggle() {
           !modelValue &&
             !disabled &&
             'border-gray-300 group-hover/check:border-(--c-primary)',
-          modelValue &&
-            !disabled &&
-            'border-(--c-primary) bg-(--c-primary)',
+          modelValue && !disabled && 'border-(--c-primary) bg-(--c-primary)',
           !modelValue && disabled && 'border-gray-200 bg-gray-100',
-          modelValue && disabled && 'border-gray-300 bg-gray-300'
+          modelValue && disabled && 'border-gray-300 bg-gray-300',
         )
       "
     >
@@ -79,11 +77,13 @@ function toggle() {
             !disabled &&
             'text-gray-700 group-hover/check:text-(--c-primary)',
           modelValue && !disabled && 'text-gray-950',
-          disabled && 'text-gray-400'
+          disabled && 'text-gray-400',
         )
       "
     >
-      {{ label }}
+      <slot>
+        {{ label }}
+      </slot>
     </span>
   </label>
 </template>

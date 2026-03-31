@@ -1,6 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../pages/Home.vue'
-import UI from '../pages/UI.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "../pages/Home.vue";
+import UI from "../pages/UI.vue";
+
+// Lazy import
+const Login = () => import("../pages/Login.vue");
+const Register = () => import("../pages/Register.vue");
 import ServiceList from '../pages/ServiceList.vue'
 import AccountStubPage from '../pages/AccountStubPage.vue'
 
@@ -8,14 +12,14 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: Home
+      path: "/",
+      name: "home",
+      component: Home,
     },
     {
-      path: '/ui',
-      name: 'ui',
-      component: UI
+      path: "/ui",
+      name: "ui",
+      component: UI,
     },
     {
       path: '/services',
@@ -45,8 +49,26 @@ const router = createRouter({
       name: 'login',
       component: AccountStubPage,
       meta: { title: 'เข้าสู่ระบบ' }
-    }
-  ]
-})
+    },
+    {
+      path: "/auth/login",
+      name: "login",
+      component: Login,
+    },
+    {
+      path: "/login",
+      redirect: "/auth/login",
+    },
+    {
+      path: "/auth/register",
+      name: "register",
+      component: Register,
+    },
+    {
+      path: "/register",
+      redirect: "/auth/register",
+    },
+  ],
+});
 
-export default router
+export default router;
