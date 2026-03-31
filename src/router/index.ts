@@ -7,6 +7,8 @@ const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
 import ServiceList from '../pages/ServiceList.vue'
 import AccountStubPage from '../pages/AccountStubPage.vue'
+import AdminRegister from '../pages/Admin/Register.vue'
+import AdminLogin from '../pages/Admin/Login.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -54,6 +56,16 @@ const router = createRouter({
       path: "/auth/login",
       name: "login",
       component: Login,
+    },
+    {
+      path: '/admin/register',
+      name: 'admin-register',
+      component: AdminRegister
+    },
+    {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: AdminLogin
     },
     {
       path: "/login",
