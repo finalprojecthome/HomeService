@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { ErrorMessage, useFieldError } from "vee-validate";
+import { ErrorMessage, Field, useFieldError } from "vee-validate";
 import Input from "../ui/Input.vue";
 
 interface Props {
@@ -10,7 +10,15 @@ interface Props {
   type?: "text" | "email" | "password";
   placeholder?: string;
   autocomplete?: string;
-  inputmode?:string
+  inputmode?:
+    | "text"
+    | "email"
+    | "search"
+    | "tel"
+    | "url"
+    | "none"
+    | "numeric"
+    | "decimal";
   disabled?: boolean;
   rules?: string;
   required?: boolean;
@@ -26,7 +34,7 @@ const inputRules = computed(() => {
   const rules = props.rules ?? "";
 
   if (props.required) {
-    return "required|" + rules;
+    return "inputRequired|" + rules;
   }
 
   return rules;
@@ -39,22 +47,27 @@ const inputRules = computed(() => {
       :for="props.name + '-id'"
       class="flex gap-0.5 w-fit style-headline-5"
     >
-      {{ props.label }}
+      {{ label }}
       <span v-if="props.required" class="text-red">*</span>
     </label>
-    <Input
-      :id="props.name"
+    <Field
       :name="props.name"
       :type="props.type"
       :value="props.value"
-      :placeholder="props.placeholder"
-      :autocomplete="props.autocomplete"
-      :inputmode="props.inputmode"
       :rules="inputRules"
       :disabled="props.disabled"
-      :isError="isFieldError"
-      :class="props.class"
-    />
+      v-slot="{ field }"
+    >
+      <Input
+        v-bind="field"
+        :type="props.type"
+        :placeholder="props.placeholder"
+        :autocomplete="props.autocomplete"
+        :inputmode="props.inputmode"
+        :isError="isFieldError"
+        :class="props.class"
+      />
+    </Field>
     <ErrorMessage :name="props.name" class="style-body-4 text-red" />
   </div>
 </template>

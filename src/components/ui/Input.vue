@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Field } from "vee-validate";
 import { ExclamationCircleIcon } from "../icons";
 import cn from "../../utils/cn";
 
@@ -9,10 +8,17 @@ interface Props {
   type?: "text" | "email" | "password";
   placeholder?: string;
   autocomplete?: string;
-  inputmode?: string;
+  inputmode?:
+    | "text"
+    | "email"
+    | "search"
+    | "tel"
+    | "url"
+    | "none"
+    | "numeric"
+    | "decimal";
   disabled?: boolean;
   isError?: boolean;
-  rules?: string;
   class?: string;
 }
 
@@ -21,7 +27,7 @@ const props = defineProps<Props>();
 
 <template>
   <div :class="cn('relative', props.class)">
-    <Field
+    <input
       :id="props.name + '-id'"
       :name="props.name"
       :type="props.type"
@@ -29,7 +35,6 @@ const props = defineProps<Props>();
       :placeholder="props.placeholder"
       :autocomplete="props.autocomplete"
       :inputmode="props.inputmode"
-      :rules="props.rules"
       :disabled="props.disabled"
       :class="
         cn(
