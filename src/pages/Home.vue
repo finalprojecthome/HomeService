@@ -2,7 +2,6 @@
 import ProductCard from "../components/ServiceCard.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import Icon from "../components/ui/Icon.vue";
 
 const heroImgSrc = new URL(
   "../assets/homepage/herosection.png",
