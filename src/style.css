@@ -30,7 +30,7 @@
 
   /* Body 2 */
   --font-size-body-2: 1rem; /* 16px */
-  --font-weight-body-2: 300;
+  --font-weight-body-2: 400;
 
   /* Body 3 */
   --font-size-body-3: 0.875rem; /* 14px */
@@ -168,7 +168,7 @@
 }
 
 @utility style-summary-title {
-  font-weight: var(--font-weight-body-2);
+  font-weight: 300;
   font-size: var(--font-size-body-3);
   line-height: var(--line-height);
   letter-spacing: var(--letter-spacing);

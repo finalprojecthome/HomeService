@@ -9,6 +9,7 @@ interface Props {
   type?: "text" | "email" | "password";
   placeholder?: string;
   autocomplete?: string;
+  inputmode?: string;
   disabled?: boolean;
   isError?: boolean;
   rules?: string;
@@ -27,6 +28,7 @@ const props = defineProps<Props>();
       :value="props.value"
       :placeholder="props.placeholder"
       :autocomplete="props.autocomplete"
+      :inputmode="props.inputmode"
       :rules="props.rules"
       :disabled="props.disabled"
       :class="

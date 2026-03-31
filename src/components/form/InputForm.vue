@@ -10,6 +10,7 @@ interface Props {
   type?: "text" | "email" | "password";
   placeholder?: string;
   autocomplete?: string;
+  inputmode?:string
   disabled?: boolean;
   rules?: string;
   required?: boolean;
@@ -48,6 +49,7 @@ const inputRules = computed(() => {
       :value="props.value"
       :placeholder="props.placeholder"
       :autocomplete="props.autocomplete"
+      :inputmode="props.inputmode"
       :rules="inputRules"
       :disabled="props.disabled"
       :isError="isFieldError"

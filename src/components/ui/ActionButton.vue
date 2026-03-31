@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type ButtonHTMLAttributes } from "vue";
+import { computed } from "vue";
 import {
   baseStyle,
   sizes,
@@ -12,8 +12,8 @@ import cn from "../../utils/cn";
 interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  type?: ButtonHTMLAttributes["type"];
-  disabled?: ButtonHTMLAttributes["disabled"];
+  type?: "submit" | "reset" | "button";
+  disabled?: boolean;
   class?: string;
 }
 
