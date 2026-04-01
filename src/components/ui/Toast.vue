@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import cn from "../../utils/cn";
-import Icon from "./Icon.vue";
 import { variants, type ToastVariant } from "../../utils/toast";
+import { CloseIcon } from "../icons";
 
 const props = defineProps<{
   title: string;
@@ -10,8 +10,6 @@ const props = defineProps<{
   class?: string;
   onCloseToast?: () => void;
 }>();
-
-const closeIconPath = "M6 18 18 6M6 6l12 12";
 </script>
 
 <template>
@@ -31,7 +29,7 @@ const closeIconPath = "M6 18 18 6M6 6l12 12";
         aria-label="Close notification"
         @click="props.onCloseToast?.()"
       >
-        <Icon :path="closeIconPath" class="w-5 h-5" />
+        <CloseIcon :size="20" class="shrink-0" />
       </button>
     </header>
     <p
