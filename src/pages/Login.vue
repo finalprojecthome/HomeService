@@ -1,13 +1,34 @@
 <script setup lang="ts">
-import { Form } from "vee-validate";
+import { useRouter } from "vue-router";
+import { Form, type SubmissionHandler } from "vee-validate";
+import { InputForm } from "../components/form";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import InputForm from "../components/form/InputForm.vue";
+import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
 import Separator from "../components/ui/Separator.vue";
-import ActionButton from "../components/ui/ActionButton.vue";
+import { useAuthStore } from "../stores";
+import type { LoginFormValues } from "../types/auth";
+import { showCustomToast } from "../utils/toast";
 
-const handleSubmit = (values: Record<string, unknown>) => {
-  console.log(values);
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleSubmit: SubmissionHandler = async (values) => {
+  const data = values as LoginFormValues;
+  try {
+    await authStore.login(data);
+    router.push({ name: "home" });
+    showCustomToast({
+      title: "สำเร็จ",
+      description: authStore.message || "เข้าสู่ระบบสำเร็จ",
+    });
+  } catch {
+    showCustomToast({
+      variant: "error",
+      title: "เกิดข้อผิดพลาด",
+      description: authStore.error || "ไม่สามารถเข้าสู่ระบบได้",
+    });
+  }
 };
 </script>
 
@@ -26,7 +47,10 @@ const handleSubmit = (values: Record<string, unknown>) => {
         เข้าสู่ระบบ
       </h1>
       <Form @submit="handleSubmit" class="w-full">
-        <fieldset class="flex flex-col gap-6 w-full">
+        <fieldset
+          :disabled="authStore.isLoading"
+          class="flex flex-col gap-6 w-full"
+        >
           <div class="flex flex-col gap-5">
             <InputForm
               name="email"

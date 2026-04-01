@@ -6,16 +6,19 @@ import type { User } from "../types/user";
 const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as User | null,
+    message: null as string | null,
     error: null as string | null,
     isLoading: false as boolean,
     isGetUserLoading: null as boolean | null,
   }),
   actions: {
     async register(data: RegisterFormValues) {
+      this.message = null;
       this.error = null;
       this.isLoading = true;
       try {
-        await authApi.register(data);
+        const { message } = await authApi.register(data);
+        this.message = message;
       } catch (error) {
         this.error =
           error instanceof Error ? error.message : "ลงทะเบียนไม่สำเร็จ";
@@ -26,10 +29,12 @@ const useAuthStore = defineStore("auth", {
     },
 
     async login(credentials: LoginFormValues) {
+      this.message = null;
       this.error = null;
       this.isLoading = true;
       try {
-        const { accessToken } = await authApi.login(credentials);
+        const { accessToken, message } = await authApi.login(credentials);
+        this.message = message;
         localStorage.setItem("accessToken", accessToken);
         await this.getUser();
       } catch (error) {
