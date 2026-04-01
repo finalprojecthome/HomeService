@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef } from "vue";
+import { computed, ref, toValue, type ComputedRef, type MaybeRefOrGetter } from "vue";
 import type { FilterBarState } from "../components/FilterBar.vue";
 
 type FilterableServiceItem = {
@@ -51,13 +51,14 @@ function applyFilters<T extends FilterableServiceItem>(
 }
 
 export function useServiceFilters<T extends FilterableServiceItem>(
-  items: T[],
+  items: MaybeRefOrGetter<T[]>,
 ): UseServiceFiltersResult<T> {
   const searchedFilters = ref<FilterBarState | null>(null);
 
   const displayedItems = computed(() => {
-    if (!searchedFilters.value) return items;
-    return applyFilters(items, searchedFilters.value);
+    const sourceItems = toValue(items);
+    if (!searchedFilters.value) return sourceItems;
+    return applyFilters(sourceItems, searchedFilters.value);
   });
 
   function onSearch(filters: FilterBarState) {

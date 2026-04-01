@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import FilterBar from "../components/FilterBar.vue";
 import ServiceCard from "../components/ServiceCard.vue";
 import { useServiceFilters } from "../composables/useServiceFilters";
 import { useScrollState } from "../composables/useScrollState";
+import { fetchServices, type ServiceApiItem } from "../services/serviceApi";
+import banner from "../assets/servicelist/banner.jpg";
 
 const heroBgSrc =
-  "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1600&q=80";
+  banner;
 
 const query = ref("");
 const selectedCategory = ref("");
@@ -34,6 +36,7 @@ const sortOptions = [
 ];
 
 type ServiceItem = {
+  id: string;
   title: string;
   category: string;
   categoryVariant: "blue" | "purple" | "green";
@@ -41,86 +44,52 @@ type ServiceItem = {
   imageSrc: string;
 };
 
-const serviceItems: ServiceItem[] = [
-  {
-    title: "ล้างแอร์",
-    category: "บริการทั่วไป",
-    categoryVariant: "blue" as const,
-    price: "500.00 - 10,000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ติดตั้งแอร์",
-    category: "บริการทั่วไป",
-    categoryVariant: "blue" as const,
-    price: "2000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ซ่อมแอร์",
-    category: "บริการทั่วไป",
-    categoryVariant: "blue" as const,
-    price: "4000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1616047006789-b7af5afb8c20?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ทำความสะอาดทั่วไป",
-    category: "บริการทั่วไป",
-    categoryVariant: "blue" as const,
-    price: "5000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ซ่อมเครื่องซักผ้า",
-    category: "บริการทั่วไป",
-    categoryVariant: "blue" as const,
-    price: "500.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1626806787461-102c1a7f9f79?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ติดตั้งเตาแก๊ส",
-    category: "บริการติดตั้ง",
-    categoryVariant: "purple" as const,
-    price: "1,000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ติดตั้งเครื่องดูดควัน",
-    category: "บริการติดตั้ง",
-    categoryVariant: "purple" as const,
-    price: "1,000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1628595351029-c2bf17511435?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ติดตั้งโถปัสสาวะ",
-    category: "บริการติดตั้ง",
-    categoryVariant: "green" as const,
-    price: "1,000.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1618221469555-7f3ad97540d6?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    title: "ติดตั้งเครื่องทำน้ำอุ่น",
-    category: "บริการติดตั้ง",
-    categoryVariant: "green" as const,
-    price: "500.00",
-    imageSrc:
-      "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=900&q=80",
-  },
-];
+const serviceItems = ref<ServiceItem[]>([]);
+const isLoadingServices = ref(false);
+const serviceLoadError = ref("");
+
+function mapCategoryVariant(
+  category: string,
+): "blue" | "purple" | "green" {
+  if (category === "บริการติดตั้ง") return "purple";
+  return "blue";
+}
+
+function mapApiService(item: ServiceApiItem): ServiceItem {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    categoryVariant: mapCategoryVariant(item.category),
+    price: item.price,
+    imageSrc: item.imageSrc,
+  };
+}
+
+async function loadServices() {
+  isLoadingServices.value = true;
+  serviceLoadError.value = "";
+
+  try {
+    const apiItems = await fetchServices();
+    serviceItems.value = apiItems.map(mapApiService);
+  } catch (error) {
+    serviceLoadError.value = "ไม่สามารถโหลดรายการบริการได้";
+    console.error(error);
+  } finally {
+    isLoadingServices.value = false;
+  }
+}
 
 const {
   displayedItems: displayedServiceItems,
   onSearch,
   resetSearch,
 } = useServiceFilters<ServiceItem>(serviceItems);
+
+onMounted(() => {
+  void loadServices();
+});
 
 function clearFilters() {
   query.value = "";
@@ -178,7 +147,15 @@ function clearFilters() {
       </section>
 
       <section class="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        <div v-if="displayedServiceItems.length === 0" class="rounded-xl  p-10 text-center">
+        <div v-if="isLoadingServices" class="rounded-xl p-10 text-center">
+          <p class="style-headline-5 text-gray-900">กำลังโหลดบริการ...</p>
+        </div>
+
+        <div v-else-if="serviceLoadError" class="rounded-xl p-10 text-center">
+          <p class="style-headline-5 text-gray-900">{{ serviceLoadError }}</p>
+        </div>
+
+        <div v-else-if="displayedServiceItems.length === 0" class="rounded-xl  p-10 text-center">
           <p class="style-headline-5 text-gray-900">ไม่พบบริการ</p>
           <p class="mt-2 style-body-3 text-gray-500">ลองปรับคำค้นหา หมวดหมู่ หรือช่วงราคา แล้วค้นหาอีกครั้ง</p>
         </div>
@@ -186,7 +163,7 @@ function clearFilters() {
         <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ">
           <ServiceCard
             v-for="(item, index) in displayedServiceItems"
-            :key="index"
+            :key="item.id || index"
             :title="item.title"
             :category="item.category"
             :categoryVariant="item.categoryVariant"
