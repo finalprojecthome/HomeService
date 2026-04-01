@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-white">
+  <footer>
     
     <!-- Top -->
     <div class="flex flex-wrap justify-between bg-white lg:px-40 lg:gap-25 lg:pt-10 pb-5 gap-6 px-4 py-6">
@@ -36,7 +36,7 @@
     </div>
 
     <!-- Bottom -->
-    <div class="mt-5 flex flex-wrap justify-between lg:gap-[102px] bg-gray-100 lg:py-4 lg:px-40 p-4 gap-4">
+    <div class="flex flex-wrap justify-between lg:gap-[102px] bg-gray-100 lg:py-4 lg:px-40 p-4 gap-4">
       
       <p class="style-body-4 text-gray-500 order-2 flex flex-wrap">
         copyright © 2021 HomeServices.com All rights reserved

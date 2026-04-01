@@ -9,7 +9,7 @@ const heroBgSrc =
 
 const query = ref("");
 const selectedCategory = ref("");
-const selectedPrice = ref("0-2000");
+const selectedPrice = ref("");
 const selectedPriceRange = ref<[number, number]>([0, 2000]);
 const selectedSort = ref("");
 
@@ -119,8 +119,8 @@ const serviceItems = [
         <div
           class="relative z-10 h-full max-w-6xl mx-auto px-4 md:px-8 flex flex-col items-center justify-center text-center text-white"
         >
-          <h1 class="style-headline-1 text-white">บริการของเรา</h1>
-          <p class="style-body-1 mt-3 text-blue-100">
+          <h1 class="style-headline-2 md:style-headline-1 text-white">บริการของเรา</h1>
+          <p class="style-body-3 md:style-body-1 mt-3 text-blue-100">
             ซ่อมเครื่องใช้ไฟฟ้า ซ่อมแอร์ ทำความสะอาดบ้าน และอื่น ๆ อีกมากมาย <br>
 โดยพนักงานแม่บ้าน และช่างมืออาชีพ
           </p>
@@ -130,7 +130,7 @@ const serviceItems = [
       <section
         class="w-full flex justify-center items-center border-y border-gray-200 bg-white sticky top-0 z-10"
       >
-        <div class="max-w-[1200px]mx-auto">
+        <div class="max-w-[1200px] mx-auto">
           <FilterBar
             v-model:query="query"
             v-model:service="selectedCategory"
@@ -143,7 +143,7 @@ const serviceItems = [
             price-label="ราคา"
             sort-label="เรียงตาม"
             service-placeholder="บริการทั้งหมด"
-            sort-placeholder="ตามตัวอักษร (Ascending)"
+            sort-placeholder="บริการแนะนำ"
             search-button-text="ค้นหา"
             @search="onSearch"
           />
@@ -165,24 +165,23 @@ const serviceItems = [
           />
         </div>
       </section>
-      <footer
-        class="relative overflow-hidden w-full min-h-[284px] flex justify-center items-center border-t border-gray-200 bg-blue-600"
+      <section
+        class="relative overflow-hidden w-full min-h-[400px] md:min-h-[284px] flex flex-col md:flex-row md:justify-center items-center border-t border-gray-200 bg-blue-600 pt-12 md:pt-0"
       >
-        <h3 class="text-center style-headline-3 text-white mx-auto max-w-[810px]">
+        <h3 class="text-center style-headline-4 md:style-headline-3 text-white mx-auto max-w-[810px] w-[400px] md:w-full">
           เพราะเราคือช่าง ผู้ให้บริการเรื่องบ้านอันดับ 1 แบบครบวงจร
           โดยทีมช่างมืออาชีพมากกว่า 100 ทีม 
-          สามารถตอบโจทย์ด้านการบริการเรื่องบ้านของคุณ และสร้าง <br>
-          ความสะดวกสบายในการติดต่อกับทีมช่าง ได้ทุกที่ ทุกเวลา ตลอด 24 ชม. <br>
+          สามารถตอบโจทย์ด้านการบริการเรื่องบ้านของคุณ และ สร้างความสะดวกสบายในการติดต่อกับทีมช่าง ได้ทุกที่ ทุกเวลา ตลอด 24 ชม. 
           มั่นใจ ช่างไม่ทิ้งงาน พร้อมรับประกันคุณภาพงาน
         </h3>
-        <div class="absolute -top-7 -right-34 opacity-40">
+        <div class="absolute bottom-[-60px] md:top-7 md:-right-34 opacity-40">
           <img
             src="../assets/icon/house.png"
             alt="house"
-            class="w-[416px] h-[416px]"
+            class="w-[250px] md:w-[416px] h-[250px] md:h-[416px]"
           >
         </div>
-      </footer>
+      </section>
     </div>
   </MainWithNarbar>
 </template>
