@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../pages/Home.vue";
 import UI from "../pages/UI.vue";
+import ServiceList from "../pages/ServiceList.vue";
+import AccountStubPage from "../pages/AccountStubPage.vue";
 
 // Lazy import
 const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
-import ServiceList from '../pages/ServiceList.vue'
-import AccountStubPage from '../pages/AccountStubPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,38 +22,33 @@ const router = createRouter({
       component: UI,
     },
     {
-      path: '/services',
-      name: 'services',
-      component: ServiceList
+      path: "/services",
+      name: "services",
+      component: ServiceList,
     },
     {
-      path: '/profile',
-      name: 'profile',
+      path: "/profile",
+      name: "profile",
       component: AccountStubPage,
-      meta: { title: 'ข้อมูลผู้ใช้งาน' }
+      meta: { title: "ข้อมูลผู้ใช้งาน" },
     },
     {
-      path: '/repair-orders',
-      name: 'repairOrders',
+      path: "/repair-orders",
+      name: "repairOrders",
       component: AccountStubPage,
-      meta: { title: 'รายการคำสั่งซ่อม' }
+      meta: { title: "รายการคำสั่งซ่อม" },
     },
     {
-      path: '/repair-history',
-      name: 'repairHistory',
+      path: "/repair-history",
+      name: "repairHistory",
       component: AccountStubPage,
-      meta: { title: 'ประวัติการซ่อม' }
-    },
-    {
-      path: '/auth/login',
-      name: 'login',
-      component: AccountStubPage,
-      meta: { title: 'เข้าสู่ระบบ' }
+      meta: { title: "ประวัติการซ่อม" },
     },
     {
       path: "/auth/login",
       name: "login",
       component: Login,
+      meta: { title: "เข้าสู่ระบบ" },
     },
     {
       path: "/login",
@@ -63,6 +58,7 @@ const router = createRouter({
       path: "/auth/register",
       name: "register",
       component: Register,
+      meta: { title: "ลงทะเบียน" },
     },
     {
       path: "/register",
