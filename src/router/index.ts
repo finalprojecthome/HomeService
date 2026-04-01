@@ -57,13 +57,14 @@ const router = createRouter({
       name: "login",
       component: Login,
     },
+    // admin
     {
-      path: '/admin/register',
+      path: '/auth/admin/register',
       name: 'admin-register',
       component: AdminRegister
     },
-    {
-      path: '/admin/login',
+    { 
+      path: '/auth/admin/login',
       name: 'admin-login',
       component: AdminLogin
     },
