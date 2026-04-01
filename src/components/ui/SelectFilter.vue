@@ -15,13 +15,15 @@ const props = withDefaults(
     options?: SelectFilterOption[];
     placeholder?: string;
     label?: string;
+    class?: string;
+    separatorClass?: string;
   }>(),
   {
     modelValue: "",
     options: () => [],
     placeholder: "Select...",
     label: "",
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -53,7 +55,7 @@ function handleClickOutside(e: MouseEvent) {
 
 onMounted(() => document.addEventListener("click", handleClickOutside));
 onBeforeUnmount(() =>
-  document.removeEventListener("click", handleClickOutside)
+  document.removeEventListener("click", handleClickOutside),
 );
 </script>
 
@@ -63,25 +65,25 @@ onBeforeUnmount(() =>
     class="relative inline-block min-w-40"
     :style="{ '--c-primary': PRIMARY, '--c-light': LIGHT }"
   >
-  <div
+    <div
       :class="
         cn(
-          'border-x px-8 transition-colors',
-          'border-gray-300'
+          'px-8 transition-colors',
+          props.separatorClass ?? 'border-x border-gray-300',
         )
       "
     >
-    <span v-if="label" class="style-body-4 text-gray-500 mb-1 block">
-      {{ label }}
-    </span>
-    
+      <span v-if="label" class="style-body-4 text-gray-500 mb-1 block">
+        {{ label }}
+      </span>
+
       <button
         type="button"
         :class="
           cn(
             'flex items-center w-full transition-colors rounded-full group/trigger',
             !modelValue && 'hover:bg-gray-100 hover:text-black',
-            modelValue && 'bg-(--c-light) hover:bg-(--c-light)'
+            modelValue && 'bg-(--c-light) hover:bg-(--c-light)',
           )
         "
         @click="toggleDropdown"
@@ -90,7 +92,9 @@ onBeforeUnmount(() =>
           :class="
             cn(
               'flex-1 text-left px-3 py-2 truncate',
-              modelValue ? 'style-headline-5 text-gray-950' : 'style-body-2 text-gray-500'
+              modelValue
+                ? 'style-headline-5 text-gray-950'
+                : 'style-body-2 text-black font-medium',
             )
           "
         >
@@ -136,7 +140,7 @@ onBeforeUnmount(() =>
               'w-full text-left px-4 py-2.5 style-body-2 transition-colors bg-transparent border-0 appearance-none',
               option.value === modelValue
                 ? 'text-(--c-primary) font-medium'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 hover:bg-gray-100',
             )
           "
           @click="selectOption(option.value)"

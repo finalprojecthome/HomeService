@@ -138,18 +138,13 @@ const quantityListQuantities = ref<number[]>([0, 0]);
 const query = ref("");
 const service = ref("");
 const price = ref("");
+const filterPriceRange = ref<[number, number]>([0, 2000]);
 const sort = ref("");
 
 const serviceOptions = [
   { value: "", label: "ทั้งหมด" },
   { value: "cleaning", label: "ทำความสะอาด" },
   { value: "repair", label: "ซ่อมบำรุง" },
-];
-
-const priceOptions = [
-  { value: "", label: "ทุกช่วงราคา" },
-  { value: "0-2000", label: "0-2000฿" },
-  { value: "2001-5000", label: "2001-5000฿" },
 ];
 
 const sortOptions = [
@@ -790,9 +785,9 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           v-model:query="query"
           v-model:service="service"
           v-model:price="price"
+          v-model:priceRange="filterPriceRange"
           v-model:sort="sort"
           :service-options="serviceOptions"
-          :price-options="priceOptions"
           :sort-options="sortOptions"
           @search="(v) => console.log('filter bar search', v)"
         />

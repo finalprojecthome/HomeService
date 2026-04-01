@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProductCard from "../components/ServiceCard.vue";
+import ServiceCard from "../components/ServiceCard.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 
@@ -106,7 +106,7 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
           <div
             class="px-4 mt-8 sm:mt-10 flex flex-col md:flex-row gap-6 md:gap-8 justify-center"
           >
-            <ProductCard
+            <ServiceCard
               class="cursor-pointer hover:scale-105 transition-all duration-300"
               v-for="(s, idx) in featuredServices"
               :key="idx"
