@@ -11,7 +11,7 @@ import PriceRange from "../components/ui/PriceRange.vue";
 import ImageUpload from "../components/ui/ImageUpload.vue";
 import RadioButton from "../components/ui/RadioButton.vue";
 import RadioButtonWithInput from "../components/ui/RadioButtonWithInput.vue";
-import Checkbox from "../components/ui/Checkbox.vue";
+import CheckBox from "../components/ui/CheckBox.vue";
 import SelectBox from "../components/ui/SelectBox.vue";
 import SelectFilter from "../components/ui/SelectFilter.vue";
 import PaymentSelection from "../components/PaymentSelection.vue";
@@ -750,12 +750,12 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </section>
 
         <section>
-          <h3 class="style-headline-4 text-gray-950 mb-6">Checkbox</h3>
+          <h3 class="style-headline-4 text-gray-950 mb-6">CheckBox</h3>
           <div class="flex flex-col">
-            <Checkbox v-model="checkbox1" label="Default" />
-            <Checkbox v-model="checkbox2" label="Hover" />
-            <Checkbox v-model="checkbox3" label="Selected" />
-            <Checkbox :model-value="false" label="Disable" disabled />
+            <CheckBox v-model="checkbox1" label="Default" />
+            <CheckBox v-model="checkbox2" label="Hover" />
+            <CheckBox v-model="checkbox3" label="Selected" />
+            <CheckBox :model-value="false" label="Disable" disabled />
           </div>
         </section>
       </div>

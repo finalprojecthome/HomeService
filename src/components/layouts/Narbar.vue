@@ -14,19 +14,12 @@ const authStore = useAuthStore();
 const { scrollDirection, scrollY } = useScrollState();
 
 const isHideNavbar = computed(
-  () => scrollY.value > 60 && scrollDirection.value === "down",
+  () => scrollY.value > 80 && scrollDirection.value === "down",
 );
 
-const user: { name: string; imgUrl?: string | null } | null = true
-  ? {
-      name: "สมศรี จันทร์อังคารพุธ",
-      imgUrl: true
-        ? "https://izmkosofgpuwlopleptv.supabase.co/storage/v1/object/public/user-assets/87eb79fc-f79b-43b3-828b-76b6c845409e-20260328082723.jpeg"
-        : null,
-    }
-  : null;
-
-const isGetUserLoading = false;
+const user = computed(() => authStore.user);
+const isLoading = computed(() => authStore.isLoading);
+const isGetUserLoading = computed(() => authStore.isGetUserLoading);
 
 const userMenuOpen = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
@@ -128,9 +121,13 @@ onBeforeUnmount(() =>
           บริการของเรา
         </button>
       </div>
-      <div v-if="user" ref="userMenuRef" class="relative">
+      <div
+        v-if="(user || isGetUserLoading) && !isLoading"
+        ref="userMenuRef"
+        class="relative"
+      >
         <button
-          v-if="!isGetUserLoading"
+          v-if="user"
           type="button"
           class="flex gap-3 items-center cursor-pointer rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           :aria-expanded="userMenuOpen"

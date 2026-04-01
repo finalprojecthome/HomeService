@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { Form, type SubmissionHandler } from "vee-validate";
-import { CheckboxForm, InputForm } from "../components/form";
+import { CheckBoxForm, InputForm, SelectBoxForm } from "../components/form";
+import { UserIcon, WrenchIcon } from "../components/icons";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
@@ -51,6 +52,31 @@ const handleSubmit: SubmissionHandler = async (values) => {
           :disabled="authStore.isLoading"
           class="flex flex-col gap-6 w-full"
         >
+          <div class="flex gap-4">
+            <SelectBoxForm
+              name="role"
+              value="user"
+              label="ผู้ใช้งาน"
+              rules="selectRoleRequired"
+              class="flex-1 min-h-28 max-h-28 w-auto"
+            >
+              <template #icon>
+                <UserIcon :size="40" />
+              </template>
+            </SelectBoxForm>
+            <SelectBoxForm
+              name="role"
+              value="technician"
+              label="ช่างซ่อม"
+              rules="selectRoleRequired"
+              :show-error="false"
+              class="flex-1 min-h-28 max-h-28 w-auto"
+            >
+              <template #icon>
+                <WrenchIcon :size="40" />
+              </template>
+            </SelectBoxForm>
+          </div>
           <div class="flex flex-col gap-5">
             <InputForm
               name="fullname"
@@ -97,7 +123,7 @@ const handleSubmit: SubmissionHandler = async (values) => {
               rules="confirmed:@password"
               required
             />
-            <CheckboxForm name="terms" required>
+            <CheckBoxForm name="terms" rules="checkTermsRequired">
               <div
                 class="flex flex-wrap items-center gap-1 style-body-2 text-gray-900"
               >
@@ -110,7 +136,7 @@ const handleSubmit: SubmissionHandler = async (values) => {
                   นโยบายความเป็นส่วนตัว
                 </ActionButton>
               </div>
-            </CheckboxForm>
+            </CheckBoxForm>
           </div>
           <ActionButton type="submit" class="w-full">ลงทะเบียน</ActionButton>
         </fieldset>

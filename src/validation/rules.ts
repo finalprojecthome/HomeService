@@ -51,10 +51,18 @@ defineRule("confirmed", (value: string, [target]: string[]) => {
   return "รหัสผ่านไม่ตรงกัน";
 });
 
-// Checkbox
-defineRule("checkboxRequired", (value: boolean) => {
+// CheckBox
+defineRule("checkTermsRequired", (value: boolean) => {
   if (!value) {
-    return "กรุณายืนยัน";
+    return "กรุณายอมรับข้อตกลง และข้อกำหนดการใช้งาน";
+  }
+  return true;
+});
+
+// SelectBox
+defineRule("selectRoleRequired", (value: string) => {
+  if (!value) {
+    return "กรุณาเลือกบทบาท";
   }
   return true;
 });
