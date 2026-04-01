@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import FilterBar, { type FilterBarState } from "../components/FilterBar.vue";
+import FilterBar from "../components/FilterBar.vue";
 import ServiceCard from "../components/ServiceCard.vue";
+import { useServiceFilters } from "../composables/useServiceFilters";
+import { useScrollState } from "../composables/useScrollState";
 
 const heroBgSrc =
   "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1600&q=80";
@@ -12,12 +14,16 @@ const selectedCategory = ref("");
 const selectedPrice = ref("");
 const selectedPriceRange = ref<[number, number]>([0, 2000]);
 const selectedSort = ref("");
+const { scrollDirection, scrollY } = useScrollState();
+
+const isHideNavbar = computed(
+  () => scrollY.value > 60 && scrollDirection.value === "down",
+);
 
 const categoryOptions = [
   { value: "", label: "บริการทั้งหมด" },
-  { value: "cleaning", label: "บริการทั่วไป" },
-  { value: "kitchen", label: "บริการห้องครัว" },
-  { value: "bathroom", label: "บริการห้องน้ำ" },
+  { value: "บริการทั่วไป", label: "บริการทั่วไป" },
+  { value: "บริการติดตั้ง", label: "บริการติดตั้ง" },
 ];
 
 const sortOptions = [
@@ -27,12 +33,15 @@ const sortOptions = [
   { value: "desc", label: "ตามตัวอักษร (Descending)" },
 ];
 
-function onSearch(filters: FilterBarState) {
-  // Placeholder for backend filtering in next step.
-  console.log("ServiceList filters:", filters);
-}
+type ServiceItem = {
+  title: string;
+  category: string;
+  categoryVariant: "blue" | "purple" | "green";
+  price: string;
+  imageSrc: string;
+};
 
-const serviceItems = [
+const serviceItems: ServiceItem[] = [
   {
     title: "ล้างแอร์",
     category: "บริการทั่วไป",
@@ -106,6 +115,21 @@ const serviceItems = [
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=900&q=80",
   },
 ];
+
+const {
+  displayedItems: displayedServiceItems,
+  onSearch,
+  resetSearch,
+} = useServiceFilters<ServiceItem>(serviceItems);
+
+function clearFilters() {
+  query.value = "";
+  selectedCategory.value = "";
+  selectedPrice.value = "";
+  selectedPriceRange.value = [0, 2000];
+  selectedSort.value = "";
+  resetSearch();
+}
 </script>
 
 <template>
@@ -128,9 +152,10 @@ const serviceItems = [
       </section>
 
       <section
-        class="w-full flex justify-center items-center border-y border-gray-200 bg-white sticky top-0 z-10"
+        class="w-full flex justify-center items-center border-y border-gray-200 bg-white sticky z-10 transition-[top] duration-300"
+        :class="isHideNavbar ? 'top-0' : 'top-13 md:top-20'"
       >
-        <div class="max-w-[1200px] mx-auto">
+        <div class="mx-auto">
           <FilterBar
             v-model:query="query"
             v-model:service="selectedCategory"
@@ -145,15 +170,22 @@ const serviceItems = [
             service-placeholder="บริการทั้งหมด"
             sort-placeholder="บริการแนะนำ"
             search-button-text="ค้นหา"
+            clear-button-text="ล้างตัวกรอง"
             @search="onSearch"
+            @clear="clearFilters"
           />
         </div>
       </section>
 
       <section class="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ">
+        <div v-if="displayedServiceItems.length === 0" class="rounded-xl  p-10 text-center">
+          <p class="style-headline-5 text-gray-900">ไม่พบบริการ</p>
+          <p class="mt-2 style-body-3 text-gray-500">ลองปรับคำค้นหา หมวดหมู่ หรือช่วงราคา แล้วค้นหาอีกครั้ง</p>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ">
           <ServiceCard
-            v-for="(item, index) in serviceItems"
+            v-for="(item, index) in displayedServiceItems"
             :key="index"
             :title="item.title"
             :category="item.category"

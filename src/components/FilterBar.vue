@@ -25,6 +25,7 @@ const props = withDefaults(
 
     searchPlaceholder?: string;
     searchButtonText?: string;
+    clearButtonText?: string;
 
     serviceLabel?: string;
     priceLabel?: string;
@@ -52,6 +53,7 @@ const props = withDefaults(
 
     searchPlaceholder: "ค้นหาบริการ...",
     searchButtonText: "ค้นหา",
+    clearButtonText: "ล้างตัวกรอง",
 
     serviceLabel: "",
     priceLabel: "",
@@ -76,6 +78,7 @@ const emit = defineEmits<{
   (e: "update:priceRange", value: [number, number]): void;
   (e: "update:sort", value: string): void;
   (e: "search", value: FilterBarState): void;
+  (e: "clear"): void;
 }>();
 
 const queryProxy = computed({
@@ -149,6 +152,10 @@ function submitSearch() {
 
 function toggleMobileFilters() {
   mobileFiltersOpen.value = !mobileFiltersOpen.value;
+}
+
+function clearFilters() {
+  emit("clear");
 }
 </script>
 
@@ -270,6 +277,13 @@ function toggleMobileFilters() {
         :placeholder="sortPlaceholder"
         separator-class=""
       />
+      <button
+        type="button"
+        class="md:hidden rounded-lg border border-gray-300 bg-white px-3 py-2 style-body-3 text-gray-700 hover:bg-gray-100 transition-colors"
+        @click="clearFilters"
+      >
+        {{ clearButtonText }}
+      </button>
     </div>
 
     <div class="order-2 md:order-3 w-auto md:w-auto flex items-center justify-end md:justify-start gap-2 shrink-0">
@@ -294,6 +308,14 @@ function toggleMobileFilters() {
             stroke-linejoin="round"
           />
         </svg>
+      </button>
+
+      <button
+        type="button"
+        class="hidden md:block rounded-lg border border-gray-300 bg-white px-3 py-4 style-body-3 text-gray-700 hover:bg-gray-100 transition-colors w-full cursor-pointer"
+        @click="clearFilters"
+      >
+        {{ clearButtonText }}
       </button>
 
       <ActionButton
