@@ -4,15 +4,17 @@ import { useRouter } from "vue-router";
 import { useScrollState } from "../../composables/useScrollState";
 import cn from "../../utils/cn";
 import { History, List, Logout, UserIcon } from "../icons";
+import { useAuthStore } from "../../stores";
 import Avatar from "../ui/Avatar.vue";
 import NavigationButton from "../ui/NavigationButton.vue";
 import Skeleton from "../ui/Skeleton.vue";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const { scrollDirection, scrollY } = useScrollState();
 
 const isHideNavbar = computed(
-  () => scrollY.value > 60 && scrollDirection.value === "down"
+  () => scrollY.value > 60 && scrollDirection.value === "down",
 );
 
 const user: { name: string; imgUrl?: string | null } | null = true
@@ -67,13 +69,13 @@ function goRepairHistory() {
 }
 
 function goLogout() {
-  closeUserMenu();
+  authStore.logout();
   router.push({ name: "login" });
 }
 
 onMounted(() => document.addEventListener("click", handleUserMenuOutside));
 onBeforeUnmount(() =>
-  document.removeEventListener("click", handleUserMenuOutside)
+  document.removeEventListener("click", handleUserMenuOutside),
 );
 </script>
 
@@ -85,7 +87,7 @@ onBeforeUnmount(() =>
         'transition-all duration-400 ease-in-out',
         isHideNavbar
           ? '-translate-y-full shadow-none'
-          : 'translate-y-0 shadow-[2px_2px_12px_0px_rgba(64,50,133,0.12)]'
+          : 'translate-y-0 shadow-[2px_2px_12px_0px_rgba(64,50,133,0.12)]',
       )
     "
   >

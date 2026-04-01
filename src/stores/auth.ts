@@ -62,6 +62,14 @@ const useAuthStore = defineStore("auth", {
         this.isGetUserLoading = false;
       }
     },
+
+    logout() {
+      localStorage.removeItem("accessToken");
+      this.user = null;
+      this.message = null;
+      this.error = null;
+      this.isGetUserLoading = null;
+    },
   },
 });
 
