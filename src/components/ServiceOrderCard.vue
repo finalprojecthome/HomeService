@@ -40,7 +40,7 @@ const calendarIconPath = "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.
 </script>
 
 <template>
-  <div class="style-card-box style-shadow p-5 md:p-6 w-full max-w-[800px] flex gap-5 overflow-hidden">
+  <div class="style-card-box style-shadow p-5 md:p-6 w-full  flex gap-5 overflow-hidden">
     
     <!-- Thumbnail if exists -->
     <div v-if="imageSrc" class="hidden sm:block w-[120px] h-[120px] rounded-lg bg-gray-100 shrink-0 overflow-hidden">

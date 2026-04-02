@@ -7,9 +7,11 @@ const props = defineProps<{ class?: string }>();
 </script>
 
 <template>
-  <Narbar />
-  <main :class="cn('mt-13 md:mt-20', props.class)">
-    <slot />
-  </main>
-  <Footer />
+  <div class="flex min-h-dvh flex-col">
+    <Narbar />
+    <main :class="cn('mt-13 flex-1 md:mt-20', props.class)">
+      <slot />
+    </main>
+    <Footer />
+  </div>
 </template>
