@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  /* min-width breakpoint; rem matches Tailwind v4 defaults (1700px) */
+  --breakpoint-3xl: 120rem;
+
   /* Font Family - Set as default*/
   --default-font-family: "Prompt", sans-serif;
 
