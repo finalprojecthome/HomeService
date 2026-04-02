@@ -4,27 +4,22 @@ import { useRouter } from "vue-router";
 import { useScrollState } from "../../composables/useScrollState";
 import cn from "../../utils/cn";
 import { History, List, Logout, UserIcon } from "../icons";
+import { useAuthStore } from "../../stores";
 import Avatar from "../ui/Avatar.vue";
 import NavigationButton from "../ui/NavigationButton.vue";
 import Skeleton from "../ui/Skeleton.vue";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const { scrollDirection, scrollY } = useScrollState();
 
 const isHideNavbar = computed(
-  () => scrollY.value > 60 && scrollDirection.value === "down"
+  () => scrollY.value > 80 && scrollDirection.value === "down",
 );
 
-const user: { name: string; imgUrl?: string | null } | null = true
-  ? {
-      name: "สมศรี จันทร์อังคารพุธ",
-      imgUrl: true
-        ? "https://izmkosofgpuwlopleptv.supabase.co/storage/v1/object/public/user-assets/87eb79fc-f79b-43b3-828b-76b6c845409e-20260328082723.jpeg"
-        : null,
-    }
-  : null;
-
-const isGetUserLoading = false;
+const user = computed(() => authStore.user);
+const isLoading = computed(() => authStore.isLoading);
+const isGetUserLoading = computed(() => authStore.isGetUserLoading);
 
 const userMenuOpen = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
@@ -67,13 +62,13 @@ function goRepairHistory() {
 }
 
 function goLogout() {
-  closeUserMenu();
+  authStore.logout();
   router.push({ name: "login" });
 }
 
 onMounted(() => document.addEventListener("click", handleUserMenuOutside));
 onBeforeUnmount(() =>
-  document.removeEventListener("click", handleUserMenuOutside)
+  document.removeEventListener("click", handleUserMenuOutside),
 );
 </script>
 
@@ -85,7 +80,7 @@ onBeforeUnmount(() =>
         'transition-all duration-400 ease-in-out',
         isHideNavbar
           ? '-translate-y-full shadow-none'
-          : 'translate-y-0 shadow-[2px_2px_12px_0px_rgba(64,50,133,0.12)]'
+          : 'translate-y-0 shadow-[2px_2px_12px_0px_rgba(64,50,133,0.12)]',
       )
     "
   >
@@ -126,9 +121,13 @@ onBeforeUnmount(() =>
           บริการของเรา
         </button>
       </div>
-      <div v-if="user" ref="userMenuRef" class="relative">
+      <div
+        v-if="(user || isGetUserLoading) && !isLoading"
+        ref="userMenuRef"
+        class="relative"
+      >
         <button
-          v-if="!isGetUserLoading"
+          v-if="user"
           type="button"
           class="flex gap-3 items-center cursor-pointer rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           :aria-expanded="userMenuOpen"

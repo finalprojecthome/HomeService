@@ -11,7 +11,7 @@ import PriceRange from "../components/ui/PriceRange.vue";
 import ImageUpload from "../components/ui/ImageUpload.vue";
 import RadioButton from "../components/ui/RadioButton.vue";
 import RadioButtonWithInput from "../components/ui/RadioButtonWithInput.vue";
-import Checkbox from "../components/ui/Checkbox.vue";
+import CheckBox from "../components/ui/CheckBox.vue";
 import SelectBox from "../components/ui/SelectBox.vue";
 import SelectFilter from "../components/ui/SelectFilter.vue";
 import PaymentSelection from "../components/PaymentSelection.vue";
@@ -41,8 +41,11 @@ import QuantityList from "../components/QuantityList.vue";
 import Input from "../components/ui/Input.vue";
 import DatePicker from "../components/ui/DatePicker.vue";
 import TimePicker from "../components/ui/TimePicker.vue";
-import Breadcrumb, { type BreadcrumbItem } from "../components/ui/Breadcrumb.vue";
+import Breadcrumb, {
+  type BreadcrumbItem,
+} from "../components/ui/Breadcrumb.vue";
 import Footer from "../components/Footer.vue";
+import { showCustomToast } from "../utils/toast";
 
 const bookingTime = ref<string | null>(null);
 const bookingDate = ref<string | null>(null);
@@ -79,6 +82,19 @@ const handleBreadcrumbNavigate = (index: number) => {
 const handleClickButton = () => alert("Pressed Button");
 const handleSubmit = () =>
   alert("Submit Form\n\nYes, it's submit form button\n\nเชื่อเถอะ");
+const handleToast = () => {
+  showCustomToast({
+    title: "สำเร็จ",
+    description: "ดีใจด้วย คุณเป็นคนที่ 100",
+  });
+};
+const handleErrorToast = () => {
+  showCustomToast({
+    variant: "error",
+    title: "ล้มเหลว",
+    description: "ไม่น่าเลย",
+  });
+};
 
 const dropdownOptions: DropdownOption[] = [
   { label: "Place Holder", value: "1" },
@@ -208,7 +224,6 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
 </script>
 
 <template>
-
   <!-- Main with Narbar -->
   <MainWithNarbar>
     <div
@@ -368,6 +383,15 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         />
       </div>
 
+      <!-- Toast -->
+      <h1 class="style-headline-1">Toast</h1>
+      <div class="flex flex-col items-center gap-4">
+        <ActionButton @click="handleToast" size="lg">Show Toast</ActionButton>
+        <ActionButton @click="handleErrorToast" size="lg">
+          Show Error Toast
+        </ActionButton>
+      </div>
+
       <div class="max-w-5xl mx-auto space-y-12">
         <!-- กล่องการ์ดด้านบนสุด -->
         <section>
@@ -430,7 +454,10 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
               ล้างแอร์
             </ActionButton>
 
-            <ActionButton variant="secondary" @click="selectServiceDemo('ซ่อมแอร์')">
+            <ActionButton
+              variant="secondary"
+              @click="selectServiceDemo('ซ่อมแอร์')"
+            >
               ซ่อมแอร์
             </ActionButton>
 
@@ -443,8 +470,10 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
 
       <!-- New Components Section -->
       <div class="max-w-5xl mx-auto mt-12 space-y-12">
-        <h2 class="style-headline-2 border-b pb-4">New UI Components (Service Cards & Order Summary)</h2>
-        
+        <h2 class="style-headline-2 border-b pb-4">
+          New UI Components (Service Cards & Order Summary)
+        </h2>
+
         <section class="space-y-6">
           <h3 class="style-headline-3">ServiceCard</h3>
           <ServiceCard
@@ -459,7 +488,9 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
 
         <section class="space-y-6">
           <h3 class="style-headline-3">ServiceOrderCard</h3>
-          <p class="text-sm text-gray-500 mb-4">Responsive Element: Resize window to see Mobile layout.</p>
+          <p class="text-sm text-gray-500 mb-4">
+            Responsive Element: Resize window to see Mobile layout.
+          </p>
           <ServiceOrderCard
             orderId="AD04071205"
             status="pending"
@@ -476,7 +507,7 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           <OrderSummary
             :items="[
               { name: '9,000 - 18,000 BTU, แบบติดผนัง', quantity: 2 },
-              { name: '9,000 - 18,000 BTU, แบบติดผนัง', quantity: 2 }
+              { name: '9,000 - 18,000 BTU, แบบติดผนัง', quantity: 2 },
             ]"
             date="23 เม.ย. 2022"
             time="11.00 น."
@@ -486,8 +517,6 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           />
         </section>
       </div>
-
-
 
       <div class="px-8 py-12 max-w-5xl mx-auto flex flex-col gap-12">
         <!-- Row 1: Dropdowns -->
@@ -514,8 +543,10 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           <DatePicker v-model="bookingDate" />
         </div>
         <div class="max-w-sm">
-        <TimePicker v-model="bookingTime" />
-        <p class="mt-3 text-sm text-gray-600">Selected time: {{ bookingTime }}</p>
+          <TimePicker v-model="bookingTime" />
+          <p class="mt-3 text-sm text-gray-600">
+            Selected time: {{ bookingTime }}
+          </p>
         </div>
 
         <!-- Row 2: Image Upload -->
@@ -719,12 +750,12 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
         </section>
 
         <section>
-          <h3 class="style-headline-4 text-gray-950 mb-6">Checkbox</h3>
+          <h3 class="style-headline-4 text-gray-950 mb-6">CheckBox</h3>
           <div class="flex flex-col">
-            <Checkbox v-model="checkbox1" label="Default" />
-            <Checkbox v-model="checkbox2" label="Hover" />
-            <Checkbox v-model="checkbox3" label="Selected" />
-            <Checkbox :model-value="false" label="Disable" disabled />
+            <CheckBox v-model="checkbox1" label="Default" />
+            <CheckBox v-model="checkbox2" label="Hover" />
+            <CheckBox v-model="checkbox3" label="Selected" />
+            <CheckBox :model-value="false" label="Disable" disabled />
           </div>
         </section>
       </div>

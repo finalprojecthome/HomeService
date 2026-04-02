@@ -1,14 +1,35 @@
 <script setup lang="ts">
-import { Form } from "vee-validate";
+import { useRouter } from "vue-router";
+import { Form, type SubmissionHandler } from "vee-validate";
+import { CheckBoxForm, InputForm, SelectBoxForm } from "../components/form";
+import { UserIcon, WrenchIcon } from "../components/icons";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import CheckboxForm from "../components/form/CheckboxForm.vue";
-import InputForm from "../components/form/InputForm.vue";
 import ActionButton from "../components/ui/ActionButton.vue";
 import NavigationButton from "../components/ui/NavigationButton.vue";
 import Separator from "../components/ui/Separator.vue";
+import { useAuthStore } from "../stores";
+import type { RegisterFormValues } from "../types/auth";
+import { showCustomToast } from "../utils/toast";
 
-const handleSubmit = (values: Record<string, unknown>) => {
-  console.log(values);
+const authStore = useAuthStore();
+const router = useRouter();
+
+const handleSubmit: SubmissionHandler = async (values) => {
+  const data = values as RegisterFormValues;
+  try {
+    await authStore.register(data);
+    router.push({ name: "home" });
+    showCustomToast({
+      title: "สำเร็จ",
+      description: authStore.message || "ลงทะเบียนสำเร็จ FALL",
+    });
+  } catch {
+    showCustomToast({
+      title: "เกิดข้อผิดพลาด",
+      description: authStore.error || "ไม่สามารถลงทะเบียนได้",
+      variant: "error",
+    });
+  }
 };
 </script>
 
@@ -17,17 +38,45 @@ const handleSubmit = (values: Record<string, unknown>) => {
     class="place-items-center px-4 py-8 sm:px-8 md:py-16 xl:py-24"
   >
     <section
-      aria-labelledby="login-label"
+      aria-labelledby="register-label"
       class="flex flex-col items-center gap-6 w-full max-w-153.5 px-4 py-8 bg-white style-card-box rounded-lg sm:px-8 md:px-16 md:py-12 lg:gap-8 lg:px-21.5"
     >
       <h1
-        id="login-label"
+        id="register-label"
         class="style-headline-2 text-blue-950 md:style-headline-1"
       >
         ลงทะเบียน
       </h1>
       <Form @submit="handleSubmit" class="w-full">
-        <fieldset class="flex flex-col gap-6 w-full">
+        <fieldset
+          :disabled="authStore.isLoading"
+          class="flex flex-col gap-6 w-full"
+        >
+          <div class="flex gap-4">
+            <SelectBoxForm
+              name="role"
+              value="user"
+              label="ผู้ใช้งาน"
+              rules="selectRoleRequired"
+              class="flex-1 min-h-28 max-h-28 w-auto"
+            >
+              <template #icon>
+                <UserIcon :size="40" />
+              </template>
+            </SelectBoxForm>
+            <SelectBoxForm
+              name="role"
+              value="technician"
+              label="ช่างซ่อม"
+              rules="selectRoleRequired"
+              :show-error="false"
+              class="flex-1 min-h-28 max-h-28 w-auto"
+            >
+              <template #icon>
+                <WrenchIcon :size="40" />
+              </template>
+            </SelectBoxForm>
+          </div>
           <div class="flex flex-col gap-5">
             <InputForm
               name="fullname"
@@ -67,14 +116,14 @@ const handleSubmit = (values: Record<string, unknown>) => {
               required
             />
             <InputForm
-              name="confirm-password"
+              name="confirmPassword"
               label="ยืนยันรหัสผ่าน"
               type="password"
               placeholder="กรุณายืนยันรหัสผ่าน"
               rules="confirmed:@password"
               required
             />
-            <CheckboxForm name="terms" required>
+            <CheckBoxForm name="terms" rules="checkTermsRequired">
               <div
                 class="flex flex-wrap items-center gap-1 style-body-2 text-gray-900"
               >
@@ -87,7 +136,7 @@ const handleSubmit = (values: Record<string, unknown>) => {
                   นโยบายความเป็นส่วนตัว
                 </ActionButton>
               </div>
-            </CheckboxForm>
+            </CheckBoxForm>
           </div>
           <ActionButton type="submit" class="w-full">ลงทะเบียน</ActionButton>
         </fieldset>

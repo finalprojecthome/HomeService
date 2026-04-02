@@ -19,10 +19,9 @@ const props = withDefaults(
     options: () => [
       { value: "credit-card", label: "บัตรเครดิต/เดบิต" },
       { value: "qr", label: "QR พร้อมเพย์" },
-      
     ],
     label: "ชำระเงิน",
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -55,14 +54,7 @@ const hasPaymentSelection = computed(() => props.modelValue !== "");
         @update:model-value="updatePayment"
       >
         <template #icon>
-          <span
-            class="w-8 h-8 flex items-center justify-center transition-colors"
-            :class="
-              option.value === modelValue
-                ? 'text-(--c-primary)'
-                : 'text-gray-700 group-hover/box:text-(--c-primary)'
-            "
-          >
+          <span class="flex items-center justify-center transition-colors">
             <QrIcon v-if="option.value === 'qr'" :size="32" />
             <Card v-else :size="32" />
           </span>
