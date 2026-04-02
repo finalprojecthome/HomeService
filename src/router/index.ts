@@ -14,6 +14,7 @@ import AdminLogin from "../pages/Admin/Login.vue";
 import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 import { useAuthStore } from "../stores";
 import { showCustomToast } from "../utils/toast";
+import TechnicianLayout from '../layouts/TechnicianLayout.vue'
 
 const BookingPage = () => import("../pages/BookingPage.vue");
 const Login = () => import("../pages/Login.vue");
@@ -115,6 +116,43 @@ const router = createRouter({
         title: "เข้าสู่ระบบ",
         requiresGuest: true,
       },
+    },
+    {
+      path: '/technician',
+      component: TechnicianLayout,
+      redirect: '/technician/requests',
+      children: [
+        {
+          path: 'requests',
+          name: 'technician-requests',
+          component: () => import('../pages/technician/ServiceRequests.vue')
+        },
+        {
+          path: 'pending',
+          name: 'technician-pending',
+          component: () => import('../pages/technician/PendingTasks.vue')
+        },
+        {
+          path: 'pending/:id',
+          name: 'technician-pending-details',
+          component: () => import('../pages/technician/PendingTaskDetails.vue')
+        },
+        {
+          path: 'history',
+          name: 'technician-history',
+          component: () => import('../pages/technician/HistoryTasks.vue')
+        },
+        {
+          path: 'history/:id',
+          name: 'technician-history-details',
+          component: () => import('../pages/technician/HistoryTaskDetails.vue')
+        },
+        {
+          path: 'settings',
+          name: 'technician-settings',
+          component: () => import('../pages/technician/AccountSettings.vue')
+        }
+      ]
     },
     {
       path: "/login",

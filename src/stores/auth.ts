@@ -38,6 +38,7 @@ const useAuthStore = defineStore("auth", {
       try {
         const user = await authApi.getUser();
         this.user = user;
+        localStorage.setItem("userRole", user.role.toLowerCase());
       } catch (error) {
         this.error =
           error instanceof Error
@@ -107,6 +108,7 @@ const useAuthStore = defineStore("auth", {
 
     logout() {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("userRole");
       this.user = null;
       this.message = null;
       this.error = null;
