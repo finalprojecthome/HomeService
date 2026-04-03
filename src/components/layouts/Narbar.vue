@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useScrollState } from "../../composables/useScrollState";
 import cn from "../../utils/cn";
@@ -23,6 +23,12 @@ const isGetUserLoading = computed(() => authStore.isGetUserLoading);
 
 const userMenuOpen = ref(false);
 const userMenuRef = ref<HTMLElement | null>(null);
+
+watch(isHideNavbar, () => {
+  if (isHideNavbar) {
+    closeUserMenu();
+  }
+});
 
 function goHome() {
   router.push({ name: "home" });

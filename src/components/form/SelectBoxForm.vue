@@ -13,14 +13,7 @@ interface Props {
   class?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  label: "",
-  showError: true,
-  disabled: false,
-  rules: "",
-  required: false,
-  class: "",
-});
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
