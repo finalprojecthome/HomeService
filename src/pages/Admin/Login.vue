@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import axios from "axios";
 import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
 import TextInput from "../../components/ui/TextInput.vue";
 import { loginAdmin, setAdminAccessToken } from "../../services/adminAuth";
 
 const router = useRouter();
+const route = useRoute();
 
 const email = ref("");
 const password = ref("");
@@ -45,7 +46,11 @@ async function submit() {
     });
 
     setAdminAccessToken(data.accessToken);
-    router.push("/profile");
+    const redirectPath =
+      typeof route.query.redirect === "string"
+        ? route.query.redirect
+        : "/admin/category";
+    router.push(redirectPath);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       serverError.value =

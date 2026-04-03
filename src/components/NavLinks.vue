@@ -21,6 +21,18 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
+
+function isActiveLink(link: NavLink) {
+  if (typeof link.active === "boolean") {
+    return link.active;
+  }
+
+  if (!link.path) {
+    return false;
+  }
+
+  return route.path === link.path || route.path.startsWith(`${link.path}/`);
+}
 </script>
 
 <template>
@@ -31,7 +43,7 @@ const route = useRoute();
       :title="link.title"
       :icon="link.icon"
       :badge="link.badge"
-      :active="link.active ?? (link.path === route.path)"
+      :active="isActiveLink(link)"
       @click="emit('click', link)"
     />
   </div>

@@ -29,5 +29,8 @@ export {
   ChevronDownIcon,
   CalendarIcon,
   ClockIcon,
-  
+  SearchIcon,
+  categoryIcon,
+  serviceIcon,
+  promotionCodeIcon,
 } from "./icons";

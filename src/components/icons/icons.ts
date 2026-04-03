@@ -200,3 +200,59 @@ export const CalendarIcon = createIcon(
   ],
   "0 0 20 20"
 );
+
+export const SearchIcon = createIcon(
+  strokePath(
+    "M21 21L16.65 16.65M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z"
+  )
+);
+
+export const categoryIcon = createIcon(() => [
+  h("g", {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  }, [
+    h("rect", { x: "3.25", y: "3.25", width: "7", height: "7", rx: "2" }),
+    h("rect", { x: "13.75", y: "3.25", width: "7", height: "7", rx: "2" }),
+    h("rect", { x: "3.25", y: "13.75", width: "7", height: "7", rx: "2" }),
+    h("rect", { x: "13.75", y: "13.75", width: "7", height: "7", rx: "2" }),
+  ]),
+]);
+
+export const serviceIcon = createIcon(() => [
+  h("g", {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  }, [
+    h("path", {
+      d: "M8.75 9.25H7.25C6.2835 9.25 5.5 10.0335 5.5 11V18.75C5.5 19.7165 6.2835 20.5 7.25 20.5H15C15.9665 20.5 16.75 19.7165 16.75 18.75V17.25",
+    }),
+    h("path", {
+      d: "M10.5 3.5H15L18.5 7V14C18.5 14.9665 17.7165 15.75 16.75 15.75H10.5C9.5335 15.75 8.75 14.9665 8.75 14V5.25C8.75 4.2835 9.5335 3.5 10.5 3.5Z",
+    }),
+    h("path", { d: "M15 3.75V7H18.25" }),
+  ]),
+]);
+
+export const promotionCodeIcon = createIcon(() => [
+  h("g", {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  }, [
+    h("path", {
+      d: "M5.25 7.5H18.75C19.7165 7.5 20.5 8.2835 20.5 9.25V10.75C19.5335 10.75 18.75 11.5335 18.75 12.5C18.75 13.4665 19.5335 14.25 20.5 14.25V15.75C20.5 16.7165 19.7165 17.5 18.75 17.5H5.25C4.2835 17.5 3.5 16.7165 3.5 15.75V14.25C4.4665 14.25 5.25 13.4665 5.25 12.5C5.25 11.5335 4.4665 10.75 3.5 10.75V9.25C3.5 8.2835 4.2835 7.5 5.25 7.5Z",
+    }),
+    h("path", { d: "M14.75 8.75V10.5" }),
+    h("path", { d: "M14.75 11.75V13.5" }),
+    h("path", { d: "M14.75 14.75V16.5" }),
+  ]),
+]);
