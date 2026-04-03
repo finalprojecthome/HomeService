@@ -8,11 +8,10 @@ import ActionButton from "../../../components/ui/ActionButton.vue";
 import TextInput from "../../../components/ui/TextInput.vue";
 import { createAdminCategory } from "../../../services/AdminCategory";
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { showCustomToast } from "../../../utils/toast";
 
 const router = useRouter();
 
-// ===== Page State =====
-// Responsibility: create a category and guard against accidental navigation loss.
 const categoryName = ref("");
 const fieldError = ref("");
 const errorMessage = ref("");
@@ -61,8 +60,6 @@ function closeSuccessModal() {
   isSuccessModalOpen.value = false;
 }
 
-/* ================= Submit Flow ================= */
-// Business rule: category name is required before the create request can run.
 async function handleSubmit() {
   if (isSubmitting.value) {
     return;
@@ -84,7 +81,18 @@ async function handleSubmit() {
     });
     isSuccessModalOpen.value = true;
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถสร้างหมวดหมู่ได้");
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถสร้างหมวดหมู่ได้");
+
+    if (apiMessage === "Category name already exists") {
+      showCustomToast({
+        variant: "error",
+        title: "เกิดข้อผิดพลาด",
+        description: `ชื่อหมวดหมู่ ‘${trimmedCategoryName.value}’ มีการใช้ในระบบแล้ว`,
+      });
+      return;
+    }
+
+    errorMessage.value = apiMessage;
   } finally {
     isSubmitting.value = false;
   }
@@ -101,14 +109,14 @@ async function handleSubmit() {
       <main class="flex-1 overflow-x-hidden bg-bg-gray">
         <section class="flex min-h-screen flex-col">
           <header
-            class="flex items-center justify-between px-[35px] py-[17px] bg-white"
+            class="flex items-center justify-between bg-white px-[35px] py-[17px]"
           >
             <h1 class="style-headline-2 text-gray-950">เพิ่มหมวดหมู่</h1>
 
             <div class="flex items-center justify-end gap-[14px]">
               <ActionButton
                 variant="secondary"
-                class="justify-center min-w-[97px]"
+                class="min-w-[97px] justify-center"
                 :disabled="isSubmitting"
                 @click="openCancelFlow"
               >
@@ -116,7 +124,7 @@ async function handleSubmit() {
               </ActionButton>
 
               <ActionButton
-                class="justify-center min-w-[97px]"
+                class="min-w-[97px] justify-center"
                 :disabled="isSubmitting"
                 @click="handleSubmit"
               >
@@ -134,7 +142,8 @@ async function handleSubmit() {
               class="rounded-[8px] border border-gray-200 bg-white px-[16px] py-[22px] style-shadow"
             >
               <div
-                class="grid items-start gap-[16px] md:grid-cols-[126px_minmax(0,272px)] md:gap-[18px]"
+                class
+                ="grid items-start gap-[16px] md:grid-cols-[126px_minmax(0,272px)] md:gap-[18px]"
               >
                 <div class="pt-[10px]">
                   <p class="style-body-5 text-gray-700">
@@ -171,7 +180,7 @@ async function handleSubmit() {
     <Modal
       v-model="isCancelConfirmModalOpen"
       title="ยืนยันการยกเลิก"
-      message="มีข้อมูลชื่อหมวดหมู่อยู่ในฟอร์ม\nต้องการยกเลิกและกลับไปหน้ารายการหรือไม่"
+      message="มีข้อมูลชื่อหมวดหมู่อยู่ในฟอร์ม ต้องการยกเลิกและกลับไปหน้ารายการหรือไม่"
       confirm-text="ยืนยันยกเลิก"
       cancel-text="อยู่ต่อ"
       @confirm="goToCategoryList"

@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AdminSidebar from "../../../components/admin/AdminSidebar.vue";
 import Modal from "../../../components/AlertModal.vue";
+import CategoryDeleteModal from "../../../components/admin/CategoryDeleteModal.vue";
 import { Bin } from "../../../components/icons";
 import ActionButton from "../../../components/ui/ActionButton.vue";
 import Icon from "../../../components/ui/Icon.vue";
@@ -14,14 +16,13 @@ import {
 } from "../../../services/AdminCategory";
 import { formatDate } from "../../../utils/formatDateAdmin";
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { showCustomToast } from "../../../utils/toast";
 
 const router = useRouter();
 const route = useRoute();
 
 const backIconPath = "M15.75 19.5L8.25 12l7.5-7.5";
 
-// ===== Route Context =====
-// Responsibility: edit a single category identified by the current route param.
 const categoryId = computed(() => {
   const rawId = Array.isArray(route.params.id)
     ? route.params.id[0]
@@ -40,6 +41,8 @@ const isLoading = ref(false);
 const isSubmitting = ref(false);
 const isDeleting = ref(false);
 const isDeleteModalOpen = ref(false);
+const requiresForceDelete = ref(false);
+const deleteModalErrorMessage = ref("");
 const isCancelConfirmModalOpen = ref(false);
 
 const trimmedCategoryName = computed(() => categoryName.value.trim());
@@ -50,6 +53,14 @@ const isBusy = computed(
   () => isLoading.value || isSubmitting.value || isDeleting.value,
 );
 const canDelete = computed(() => categoryId.value !== null && !isLoading.value);
+const canSubmit = computed(
+  () =>
+    categoryId.value !== null &&
+    !isLoading.value &&
+    !isSubmitting.value &&
+    !isDeleting.value &&
+    isFormDirty.value,
+);
 
 watch(categoryName, () => {
   if (fieldError.value) {
@@ -69,8 +80,6 @@ function goToCategoryList() {
   router.push("/admin/category");
 }
 
-// ===== Data Fetching =====
-// Responsibility: load the current category before edit and detail metadata rendering.
 async function fetchCategory() {
   if (categoryId.value === null) {
     errorMessage.value = "ไม่พบรหัสหมวดหมู่ที่ต้องการแก้ไข";
@@ -115,15 +124,17 @@ function openDeleteModal() {
     return;
   }
 
+  requiresForceDelete.value = false;
+  deleteModalErrorMessage.value = "";
   isDeleteModalOpen.value = true;
 }
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false;
+  requiresForceDelete.value = false;
+  deleteModalErrorMessage.value = "";
 }
 
-/* ================= Submit Flow ================= */
-// Business rule: invalid route id and empty category name must block the update request.
 async function handleSubmit() {
   if (isBusy.value) {
     return;
@@ -142,6 +153,10 @@ async function handleSubmit() {
     return;
   }
 
+  if (!isFormDirty.value) {
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
@@ -150,10 +165,18 @@ async function handleSubmit() {
     });
     goToCategoryList();
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(
-      error,
-      "ไม่สามารถบันทึกข้อมูลหมวดหมู่ได้",
-    );
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถบันทึกข้อมูลหมวดหมู่ได้");
+
+    if (apiMessage === "Category name already exists") {
+      showCustomToast({
+        variant: "error",
+        title: "เกิดข้อผิดพลาด",
+        description: `ชื่อหมวดหมู่ ${trimmedCategoryName.value} มีการใช้ในระบบแล้ว`,
+      });
+      return;
+    }
+
+    errorMessage.value = apiMessage;
   } finally {
     isSubmitting.value = false;
   }
@@ -166,12 +189,24 @@ async function deleteCategory() {
 
   isDeleting.value = true;
   errorMessage.value = "";
+  deleteModalErrorMessage.value = "";
 
   try {
-    await deleteAdminCategory(categoryId.value);
+    await deleteAdminCategory(categoryId.value, requiresForceDelete.value);
     goToCategoryList();
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถลบหมวดหมู่ได้");
+    const axiosError = error as AxiosError<{ message?: string }>;
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบหมวดหมู่ได้");
+
+    if (
+      axiosError.response?.status === 409 &&
+      apiMessage === "Category cannot be deleted because it is in use"
+    ) {
+      requiresForceDelete.value = true;
+      return;
+    }
+
+    errorMessage.value = apiMessage;
     isDeleteModalOpen.value = false;
   } finally {
     isDeleting.value = false;
@@ -189,22 +224,22 @@ async function deleteCategory() {
       <main class="flex-1 overflow-x-hidden bg-bg-gray">
         <section class="flex min-h-screen flex-col">
           <header
-            class="flex flex-col gap-4 px-[35px] py-[17px] bg-white md:flex-row md:items-center md:justify-between"
+            class="flex flex-col gap-4 bg-white px-[35px] py-[17px] md:flex-row md:items-center md:justify-between"
           >
             <div class="flex items-center gap-3">
               <button
                 type="button"
-                class="flex items-center justify-center w-10 h-10 rounded-full text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+                class="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="isBusy"
                 aria-label="Back to category list"
                 @click="goToCategoryList"
               >
-                <Icon :path="backIconPath" class="w-5 h-5" />
+                <Icon :path="backIconPath" class="h-5 w-5" />
               </button>
 
               <div class="min-w-0">
                 <p class="style-body-4 text-gray-500">หมวดหมู่</p>
-                <h1 class="style-headline-3 truncate text-gray-950">
+                <h1 class="truncate style-headline-3 text-gray-950">
                   {{ initialCategoryName || "แก้ไขหมวดหมู่" }}
                 </h1>
               </div>
@@ -213,7 +248,7 @@ async function deleteCategory() {
             <div class="flex items-center justify-end gap-[14px]">
               <ActionButton
                 variant="secondary"
-                class="justify-center min-w-[97px]"
+                class="min-w-[97px] justify-center"
                 :disabled="isBusy"
                 @click="openCancelFlow"
               >
@@ -221,8 +256,8 @@ async function deleteCategory() {
               </ActionButton>
 
               <ActionButton
-                class="justify-center min-w-[97px]"
-                :disabled="isBusy"
+                class="min-w-[97px] justify-center"
+                :disabled="!canSubmit"
                 @click="handleSubmit"
               >
                 ยืนยัน
@@ -273,11 +308,11 @@ async function deleteCategory() {
             <div class="mt-6 flex justify-end">
               <button
                 type="button"
-                class="flex items-center gap-2 cursor-pointer style-button text-gray-600 transition-colors hover:text-red disabled:cursor-not-allowed disabled:opacity-60"
+                class="style-button flex cursor-pointer items-center gap-2 text-gray-600 transition-colors hover:text-red disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="!canDelete || isSubmitting || isDeleting"
                 @click="openDeleteModal"
               >
-                <component :is="Bin" class="w-[24px] h-[24px]" />
+                <component :is="Bin" class="h-[24px] w-[24px]" />
                 <span>ลบหมวดหมู่</span>
               </button>
             </div>
@@ -286,12 +321,12 @@ async function deleteCategory() {
       </main>
     </div>
 
-    <Modal
+    <CategoryDeleteModal
       v-model="isDeleteModalOpen"
-      :item-name="`'${initialCategoryName || trimmedCategoryName}'`"
-      title="ยืนยันการลบรายการ?"
-      confirm-text="ลบรายการ"
-      cancel-text="ยกเลิก"
+      :category-name="initialCategoryName || trimmedCategoryName"
+      :requires-typed-confirmation="requiresForceDelete"
+      :is-submitting="isDeleting"
+      :error-message="deleteModalErrorMessage"
       @confirm="deleteCategory"
       @cancel="closeDeleteModal"
     />
@@ -299,7 +334,7 @@ async function deleteCategory() {
     <Modal
       v-model="isCancelConfirmModalOpen"
       title="ยืนยันการยกเลิก"
-      message="มีข้อมูลชื่อหมวดหมู่อยู่ในฟอร์ม\nต้องการยกเลิกและกลับไปหน้ารายการหรือไม่"
+      message="มีข้อมูลชื่อหมวดหมู่อยู่ในฟอร์ม ต้องการยกเลิกและกลับไปหน้ารายการหรือไม่"
       confirm-text="ยืนยันยกเลิก"
       cancel-text="อยู่ต่อ"
       @confirm="goToCategoryList"

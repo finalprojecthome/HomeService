@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import axios from "axios";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
 import TextInput from "../../components/ui/TextInput.vue";
-import { loginAdmin, setAdminAccessToken } from "../../services/adminAuth";
+import {
+  clearAdminAccessToken,
+  fetchAdminMe,
+  getAdminAccessToken,
+  initializeAdminAuthSession,
+  loginAdmin,
+} from "../../services/adminAuth";
 
 const router = useRouter();
 const route = useRoute();
@@ -14,7 +19,9 @@ const email = ref("");
 const password = ref("");
 
 const isSubmitting = ref(false);
+const isResolvingSession = ref(false);
 const serverError = ref<string | null>(null);
+const successMessage = ref<string | null>(null);
 const hasSubmitted = ref(false);
 
 const fieldErrors = computed(() => {
@@ -36,32 +43,74 @@ const hasClientError = computed(() =>
 async function submit() {
   hasSubmitted.value = true;
   serverError.value = null;
+  successMessage.value = null;
   if (hasClientError.value) return;
 
   isSubmitting.value = true;
   try {
-    const data = await loginAdmin({
+    const session = await loginAdmin({
       email: email.value.trim(),
       password: password.value,
     });
+    if (!session.accessToken) {
+      throw new Error("ไม่สามารถสร้างเซสชันแอดมินได้");
+    }
 
-    setAdminAccessToken(data.accessToken);
+    const admin = await fetchAdminMe(true);
+    if (admin.role !== "admin") {
+      clearAdminAccessToken();
+      throw new Error("บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานแอดมิน");
+    }
+
+    successMessage.value = "เข้าสู่ระบบสำเร็จ";
     const redirectPath =
       typeof route.query.redirect === "string"
         ? route.query.redirect
         : "/admin/category";
-    router.push(redirectPath);
+    router.replace(redirectPath);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      serverError.value =
-        error.response?.data?.message || "ไม่สามารถเข้าสู่ระบบได้";
-    } else {
-      serverError.value = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
-    }
+    serverError.value =
+      error instanceof Error
+        ? error.message
+        : "ไม่สามารถเข้าสู่ระบบแอดมินได้";
   } finally {
     isSubmitting.value = false;
   }
 }
+
+onMounted(async () => {
+  isResolvingSession.value = true;
+  serverError.value = null;
+
+  try {
+    await initializeAdminAuthSession();
+    const token = await getAdminAccessToken();
+    if (!token) {
+      return;
+    }
+
+    const admin = await fetchAdminMe(true);
+    if (admin.role !== "admin") {
+      clearAdminAccessToken();
+      serverError.value = "บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานแอดมิน";
+      return;
+    }
+
+    const redirectPath =
+      typeof route.query.redirect === "string"
+        ? route.query.redirect
+        : "/admin/category";
+    router.replace(redirectPath);
+  } catch (error) {
+    clearAdminAccessToken();
+    serverError.value =
+      error instanceof Error
+        ? error.message
+        : "ไม่สามารถตรวจสอบสิทธิ์แอดมินได้";
+  } finally {
+    isResolvingSession.value = false;
+  }
+});
 </script>
 
 <template>
@@ -107,6 +156,12 @@ async function submit() {
         <div v-if="serverError" class="style-body-4 text-red">
           {{ serverError }}
         </div>
+        <div v-if="successMessage" class="style-body-4 text-green-900">
+          {{ successMessage }}
+        </div>
+        <div v-if="isResolvingSession" class="style-body-4 text-gray-700">
+          กำลังตรวจสอบเซสชันแอดมิน...
+        </div>
 
         <div class="flex flex-col items-center gap-4">
           <ActionButton
@@ -114,7 +169,7 @@ async function submit() {
             variant="primary"
             size="lg"
             class="w-full justify-center py-3"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || isResolvingSession"
           >
             {{ isSubmitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ" }}
           </ActionButton>

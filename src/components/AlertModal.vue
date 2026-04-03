@@ -34,13 +34,26 @@ const emit = defineEmits<{
 
 const closeIconPath = "M6 6L18 18M18 6L6 18";
 
+function toCurlyQuotes(value: string) {
+  return value
+    .replace(/"([^"]+)"/g, "‘$1’")
+    .replace(/'([^']+)'/g, "‘$1’");
+}
+
+const resolvedTitle = computed(() => toCurlyQuotes(props.title));
+
 const resolvedMessage = computed(() => {
   if (props.message) {
-    return props.message;
+    return toCurlyQuotes(props.message);
   }
 
-  return `คุณต้องการลบรายการ ${props.itemName}\nใช่หรือไม่`;
+  return toCurlyQuotes(`คุณต้องการลบรายการ ${props.itemName}
+ใช่หรือไม่`);
 });
+
+const messageLines = computed(() =>
+  resolvedMessage.value.split("\n").filter((line) => line.trim().length > 0),
+);
 
 function closeModal() {
   emit("update:modelValue", false);
@@ -76,12 +89,14 @@ function confirmAction() {
           <component :is="icon" :class="['mb-4 h-8 w-8', iconClass]" />
 
           <h2 class="style-headline-2 text-gray-950">
-            {{ title }}
+            {{ resolvedTitle }}
           </h2>
 
-          <p class="mt-4 whitespace-pre-line style-body-2 text-gray-700">
-            {{ resolvedMessage }}
-          </p>
+          <div class="mt-4 space-y-2 style-body-2 text-gray-700">
+            <p v-for="(line, index) in messageLines" :key="index">
+              {{ line }}
+            </p>
+          </div>
 
           <div
             class="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center"

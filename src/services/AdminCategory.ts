@@ -75,8 +75,12 @@ export async function updateAdminCategory(
   return data;
 }
 
-export async function deleteAdminCategory(categoryId: number) {
-  await apiAdmin.delete(`/api/admin/categories/${categoryId}`);
+export async function deleteAdminCategory(categoryId: number, force = false) {
+  await apiAdmin.delete(`/api/admin/categories/${categoryId}`, {
+    params: {
+      force: force || undefined,
+    },
+  });
 }
 
 export async function reorderAdminCategories(

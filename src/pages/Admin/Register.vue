@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import axios from "axios";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
 import TextInput from "../../components/ui/TextInput.vue";
-import { registerAdmin, setAdminAccessToken } from "../../services/adminAuth";
+import {
+  fetchAdminMe,
+  getAdminAccessToken,
+  initializeAdminAuthSession,
+  registerAdmin,
+} from "../../services/adminAuth";
 
 const router = useRouter();
 
@@ -16,6 +20,7 @@ const password = ref("");
 const inviteCode = ref("");
 
 const isSubmitting = ref(false);
+const isCheckingSession = ref(false);
 const serverError = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const hasSubmitted = ref(false);
@@ -56,28 +61,44 @@ async function submit() {
 
   isSubmitting.value = true;
   try {
-    const data = await registerAdmin({
+    await registerAdmin({
       email: email.value.trim(),
-      password: password.value,
       name: name.value.trim(),
       phone: phone.value.trim(),
+      password: password.value,
       inviteCode: inviteCode.value.trim(),
     });
 
-    setAdminAccessToken(data.accessToken);
-    successMessage.value = "สมัครแอดมินสำเร็จ กรุณาเข้าสู่ระบบ";
-    setTimeout(() => router.push({ name: "admin-login" }), 500);
+    successMessage.value = "สมัครแอดมินสำเร็จ";
+    router.replace("/admin/category");
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      serverError.value =
-        error.response?.data?.message || "สมัครแอดมินไม่สำเร็จ";
-    } else {
-      serverError.value = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
-    }
+    serverError.value =
+      error instanceof Error ? error.message : "สมัครแอดมินไม่สำเร็จ";
   } finally {
     isSubmitting.value = false;
   }
 }
+
+onMounted(async () => {
+  isCheckingSession.value = true;
+  try {
+    await initializeAdminAuthSession();
+    const token = await getAdminAccessToken();
+    if (!token) {
+      return;
+    }
+
+    const admin = await fetchAdminMe(true);
+    if (admin.role === "admin") {
+      router.replace("/admin/category");
+    }
+  } catch (error) {
+    serverError.value =
+      error instanceof Error ? error.message : "ไม่สามารถยืนยันสิทธิ์แอดมินได้";
+  } finally {
+    isCheckingSession.value = false;
+  }
+});
 </script>
 
 <template>
@@ -144,6 +165,9 @@ async function submit() {
         <div v-if="successMessage" class="style-body-4 text-green-900">
           {{ successMessage }}
         </div>
+        <div v-if="isCheckingSession" class="style-body-4 text-gray-700">
+          กำลังตรวจสอบเซสชันแอดมิน...
+        </div>
 
         <div class="flex flex-col items-center gap-4">
           <ActionButton
@@ -151,7 +175,7 @@ async function submit() {
             variant="primary"
             size="lg"
             class="w-full justify-center py-3"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || isCheckingSession"
           >
             {{ isSubmitting ? "กำลังสมัคร..." : "สมัครแอดมิน" }}
           </ActionButton>

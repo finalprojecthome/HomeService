@@ -5,6 +5,7 @@ import {
   clearAdminAccessToken,
   fetchAdminMe,
   getAdminAccessToken,
+  initializeAdminAuthSession,
 } from "../services/adminAuth";
 import ServiceList from "../pages/ServiceList.vue";
 import AccountStubPage from "../pages/AccountStubPage.vue";
@@ -123,7 +124,8 @@ router.beforeEach(async (to) => {
     return true;
   }
 
-  const token = getAdminAccessToken();
+  await initializeAdminAuthSession();
+  const token = await getAdminAccessToken();
 
   if (!token) {
     return {

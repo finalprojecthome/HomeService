@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AdminSidebar from "../../../components/admin/AdminSidebar.vue";
-import Modal from "../../../components/AlertModal.vue";
+import CategoryDeleteModal from "../../../components/admin/CategoryDeleteModal.vue";
 import ActionButton from "../../../components/ui/ActionButton.vue";
 import TextInput from "../../../components/ui/TextInput.vue";
 import {
@@ -25,11 +26,11 @@ type AdminCategoryRow = {
 
 const router = useRouter();
 
-// ===== Page State =====
-// Responsibility: manage category listing, deletion, and page-level reorder.
 const searchKeyword = ref("");
 const debouncedSearchKeyword = ref("");
 const isDeleteModalOpen = ref(false);
+const requiresForceDelete = ref(false);
+const deleteModalErrorMessage = ref("");
 const selectedCategory = ref<AdminCategoryRow | null>(null);
 const draggedRowId = ref<number | null>(null);
 const dropTargetRowId = ref<number | null>(null);
@@ -64,8 +65,6 @@ onMounted(() => {
   void fetchCategories();
 });
 
-// ===== Data Fetching =====
-// Responsibility: retrieve category data by current search keyword and page.
 async function fetchCategories() {
   isLoading.value = true;
   errorMessage.value = "";
@@ -82,10 +81,7 @@ async function fetchCategories() {
     totalItems.value = response.totalItems;
     pageSize.value = response.size;
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(
-      error,
-      "ไม่สามารถโหลดหมวดหมู่ได้",
-    );
+    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถโหลดหมวดหมู่ได้");
   } finally {
     isLoading.value = false;
   }
@@ -93,12 +89,16 @@ async function fetchCategories() {
 
 function openDeleteModal(row: AdminCategoryRow) {
   selectedCategory.value = row;
+  requiresForceDelete.value = false;
+  deleteModalErrorMessage.value = "";
   isDeleteModalOpen.value = true;
 }
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false;
   selectedCategory.value = null;
+  requiresForceDelete.value = false;
+  deleteModalErrorMessage.value = "";
 }
 
 async function deleteCategory() {
@@ -108,9 +108,13 @@ async function deleteCategory() {
 
   isDeleting.value = true;
   errorMessage.value = "";
+  deleteModalErrorMessage.value = "";
 
   try {
-    await deleteAdminCategory(selectedCategory.value.id);
+    await deleteAdminCategory(
+      selectedCategory.value.id,
+      requiresForceDelete.value,
+    );
 
     if (categoryRows.value.length === 1 && currentPage.value > 0) {
       currentPage.value -= 1;
@@ -119,7 +123,18 @@ async function deleteCategory() {
     closeDeleteModal();
     await fetchCategories();
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถลบหมวดหมู่ได้");
+    const axiosError = error as AxiosError<{ message?: string }>;
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบหมวดหมู่ได้");
+
+    if (
+      axiosError.response?.status === 409 &&
+      apiMessage === "Category cannot be deleted because it is in use"
+    ) {
+      requiresForceDelete.value = true;
+      return;
+    }
+
+    errorMessage.value = apiMessage;
   } finally {
     isDeleting.value = false;
   }
@@ -154,8 +169,6 @@ function handleDragEnter(rowId: number) {
   dropTargetRowId.value = rowId;
 }
 
-/* ================= Reorder Flow ================= */
-// Business rule: reorder only the currently visible page, while keeping other pages intact.
 async function handleDrop(targetRowId: number) {
   const sourceRowId = draggedRowId.value;
 
@@ -190,10 +203,7 @@ async function handleDrop(targetRowId: number) {
 
     await fetchCategories();
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(
-      error,
-      "ไม่สามารถจัดลำดับหมวดหมู่ได้",
-    );
+    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถจัดลำดับหมวดหมู่ได้");
     await fetchCategories();
   } finally {
     isReordering.value = false;
@@ -244,7 +254,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
       <main class="flex-1 overflow-x-hidden">
         <section class="flex min-h-screen flex-col">
           <header
-            class="flex items-center justify-between px-[35px] py-[17px] bg-white"
+            class="flex items-center justify-between bg-white px-[35px] py-[17px]"
           >
             <h1 class="style-headline-2 text-gray-950">หมวดหมู่</h1>
 
@@ -257,13 +267,13 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                   class="pl-11"
                 />
                 <SearchIcon
-                  class="absolute left-[8px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  class="pointer-events-none absolute left-[8px] top-1/2 -translate-y-1/2 text-gray-400"
                   size="18"
                 />
               </div>
 
               <ActionButton
-                class="justify-center min-w-[165px]"
+                class="min-w-[165px] justify-center"
                 @click="router.push('/admin/category/add')"
               >
                 <span>เพิ่มหมวดหมู่</span>
@@ -340,31 +350,31 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                             <span
                               v-for="(_, dotIndex) in dragDots"
                               :key="dotIndex"
-                              class="w-[3px] h-[3px] rounded-full bg-current"
+                              class="h-[3px] w-[3px] rounded-full bg-current"
                             />
                           </span>
                         </div>
                       </td>
                       <td
-                        class="px-[24px] py-[32px] text-center cursor-pointer style-body-2"
+                        class="cursor-pointer px-[24px] py-[32px] text-center style-body-2"
                         @click="goToCategoryDetail(row.id)"
                       >
                         {{ getDisplayOrder(row.id) }}
                       </td>
                       <td
-                        class="px-[24px] py-[32px] cursor-pointer style-body-2"
+                        class="cursor-pointer px-[24px] py-[32px] style-body-2"
                         @click="goToCategoryDetail(row.id)"
                       >
                         {{ row.name }}
                       </td>
                       <td
-                        class="px-[24px] py-[32px] cursor-pointer style-body-2"
+                        class="cursor-pointer px-[24px] py-[32px] style-body-2"
                         @click="goToCategoryDetail(row.id)"
                       >
                         {{ row.createdAt }}
                       </td>
                       <td
-                        class="px-[24px] py-[32px] cursor-pointer style-body-2"
+                        class="cursor-pointer px-[24px] py-[32px] style-body-2"
                         @click="goToCategoryDetail(row.id)"
                       >
                         {{ row.updatedAt }}
@@ -378,7 +388,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                             :disabled="isBusy"
                             @click="openDeleteModal(row)"
                           >
-                            <component :is="Bin" class="w-[18px] h-[18px]" />
+                            <component :is="Bin" class="h-[18px] w-[18px]" />
                           </button>
                           <button
                             type="button"
@@ -387,7 +397,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                             :disabled="isBusy"
                             @click.stop="router.push(`/admin/category/${row.id}/edit`)"
                           >
-                            <component :is="Pencil" class="w-[18px] h-[18px]" />
+                            <component :is="Pencil" class="h-[18px] w-[18px]" />
                           </button>
                         </div>
                       </td>
@@ -425,7 +435,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
               <div class="flex items-center gap-3">
                 <ActionButton
                   variant="secondary"
-                  class="justify-center min-w-[110px]"
+                  class="min-w-[110px] justify-center"
                   :disabled="currentPage === 0 || isLoading"
                   @click="goToPreviousPage"
                 >
@@ -438,7 +448,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
 
                 <ActionButton
                   variant="secondary"
-                  class="justify-center min-w-[110px]"
+                  class="min-w-[110px] justify-center"
                   :disabled="currentPage + 1 >= totalPages || isLoading"
                   @click="goToNextPage"
                 >
@@ -451,9 +461,12 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
       </main>
     </div>
 
-    <Modal
+    <CategoryDeleteModal
       v-model="isDeleteModalOpen"
-      :item-name="`'${selectedCategory?.name ?? ''}'`"
+      :category-name="selectedCategory?.name ?? ''"
+      :requires-typed-confirmation="requiresForceDelete"
+      :is-submitting="isDeleting"
+      :error-message="deleteModalErrorMessage"
       @confirm="deleteCategory"
       @cancel="closeDeleteModal"
     />
