@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
@@ -11,6 +11,8 @@ import {
   initializeAdminAuthSession,
   loginAdmin,
 } from "../../services/adminAuth";
+import { getAdminLoginErrorState } from "../../utils/adminAuthFormErrors";
+import { showCustomToast } from "../../utils/toast";
 
 const router = useRouter();
 const route = useRoute();
@@ -20,31 +22,63 @@ const password = ref("");
 
 const isSubmitting = ref(false);
 const isResolvingSession = ref(false);
-const serverError = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
+const sessionError = ref<string | null>(null);
 const hasSubmitted = ref(false);
+const serverFieldErrors = ref<Record<"email" | "password", string | null>>({
+  email: null,
+  password: null,
+});
 
-const fieldErrors = computed(() => {
-  const errors: Record<string, string | null> = { email: null, password: null };
+const clientFieldErrors = computed(() => {
+  const errors: Record<"email" | "password", string | null> = {
+    email: null,
+    password: null,
+  };
 
-  if (!email.value.trim()) errors.email = "กรุณากรอกอีเมล";
-  if (email.value && !/^\S+@\S+\.\S+$/.test(email.value)) {
+  if (!email.value.trim()) {
+    errors.email = "กรุณากรอกอีเมล";
+  } else if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) {
     errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
   }
-  if (!password.value) errors.password = "กรุณากรอกรหัสผ่าน";
+
+  if (!password.value) {
+    errors.password = "กรุณากรอกรหัสผ่าน";
+  }
 
   return errors;
 });
 
+const fieldErrors = computed(() => ({
+  email: clientFieldErrors.value.email || serverFieldErrors.value.email,
+  password: clientFieldErrors.value.password || serverFieldErrors.value.password,
+}));
+
 const hasClientError = computed(() =>
-  Object.values(fieldErrors.value).some((value) => !!value),
+  Object.values(clientFieldErrors.value).some(Boolean),
 );
+
+watch(email, () => {
+  serverFieldErrors.value.email = null;
+});
+
+watch(password, () => {
+  serverFieldErrors.value.password = null;
+});
 
 async function submit() {
   hasSubmitted.value = true;
-  serverError.value = null;
+  sessionError.value = null;
   successMessage.value = null;
-  if (hasClientError.value) return;
+  serverFieldErrors.value = { email: null, password: null };
+
+  if (hasClientError.value) {
+    showCustomToast({
+      variant: "error",
+      title: "ข้อมูลไม่ถูกต้อง",
+    });
+    return;
+  }
 
   isSubmitting.value = true;
   try {
@@ -52,6 +86,7 @@ async function submit() {
       email: email.value.trim(),
       password: password.value,
     });
+
     if (!session.accessToken) {
       throw new Error("ไม่สามารถสร้างเซสชันแอดมินได้");
     }
@@ -69,10 +104,12 @@ async function submit() {
         : "/admin/category";
     router.replace(redirectPath);
   } catch (error) {
-    serverError.value =
-      error instanceof Error
-        ? error.message
-        : "ไม่สามารถเข้าสู่ระบบแอดมินได้";
+    const errorState = getAdminLoginErrorState(error);
+    serverFieldErrors.value = errorState.fieldErrors;
+    showCustomToast({
+      variant: "error",
+      title: errorState.toastMessage,
+    });
   } finally {
     isSubmitting.value = false;
   }
@@ -80,7 +117,7 @@ async function submit() {
 
 onMounted(async () => {
   isResolvingSession.value = true;
-  serverError.value = null;
+  sessionError.value = null;
 
   try {
     await initializeAdminAuthSession();
@@ -92,7 +129,7 @@ onMounted(async () => {
     const admin = await fetchAdminMe(true);
     if (admin.role !== "admin") {
       clearAdminAccessToken();
-      serverError.value = "บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานแอดมิน";
+      sessionError.value = "บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานแอดมิน";
       return;
     }
 
@@ -103,10 +140,8 @@ onMounted(async () => {
     router.replace(redirectPath);
   } catch (error) {
     clearAdminAccessToken();
-    serverError.value =
-      error instanceof Error
-        ? error.message
-        : "ไม่สามารถตรวจสอบสิทธิ์แอดมินได้";
+    sessionError.value =
+      error instanceof Error ? error.message : "ไม่สามารถตรวจสอบสิทธิ์แอดมินได้";
   } finally {
     isResolvingSession.value = false;
   }
@@ -153,11 +188,11 @@ onMounted(async () => {
           />
         </div>
 
-        <div v-if="serverError" class="style-body-4 text-red">
-          {{ serverError }}
-        </div>
         <div v-if="successMessage" class="style-body-4 text-green-900">
           {{ successMessage }}
+        </div>
+        <div v-if="sessionError" class="style-body-4 text-red">
+          {{ sessionError }}
         </div>
         <div v-if="isResolvingSession" class="style-body-4 text-gray-700">
           กำลังตรวจสอบเซสชันแอดมิน...

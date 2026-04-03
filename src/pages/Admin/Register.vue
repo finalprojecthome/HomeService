@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
@@ -10,6 +10,8 @@ import {
   initializeAdminAuthSession,
   registerAdmin,
 } from "../../services/adminAuth";
+import { getAdminRegisterErrorState } from "../../utils/adminAuthFormErrors";
+import { showCustomToast } from "../../utils/toast";
 
 const router = useRouter();
 
@@ -21,12 +23,24 @@ const inviteCode = ref("");
 
 const isSubmitting = ref(false);
 const isCheckingSession = ref(false);
-const serverError = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
+const sessionError = ref<string | null>(null);
 const hasSubmitted = ref(false);
+const serverFieldErrors = ref<
+  Record<"name" | "phone" | "email" | "password" | "inviteCode", string | null>
+>({
+  name: null,
+  phone: null,
+  email: null,
+  password: null,
+  inviteCode: null,
+});
 
-const fieldErrors = computed(() => {
-  const errors: Record<string, string | null> = {
+const clientFieldErrors = computed(() => {
+  const errors: Record<
+    "name" | "phone" | "email" | "password" | "inviteCode",
+    string | null
+  > = {
     name: null,
     phone: null,
     email: null,
@@ -34,30 +48,84 @@ const fieldErrors = computed(() => {
     inviteCode: null,
   };
 
-  if (!name.value.trim()) errors.name = "กรุณากรอกชื่อ";
-  if (!phone.value.trim()) errors.phone = "กรุณากรอกเบอร์โทร";
-  if (!email.value.trim()) errors.email = "กรุณากรอกอีเมล";
-  if (email.value && !/^\S+@\S+\.\S+$/.test(email.value)) {
+  if (!name.value.trim()) {
+    errors.name = "กรุณากรอกชื่อ";
+  }
+
+  if (!phone.value.trim()) {
+    errors.phone = "กรุณากรอกเบอร์โทร";
+  } else if (!/^0\d{9}$/.test(phone.value.trim())) {
+    errors.phone = "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง";
+  }
+
+  if (!email.value.trim()) {
+    errors.email = "กรุณากรอกอีเมล";
+  } else if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) {
     errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
   }
-  if (!password.value) errors.password = "กรุณากรอกรหัสผ่าน";
-  if (password.value && password.value.length < 8) {
+
+  if (!password.value) {
+    errors.password = "กรุณากรอกรหัสผ่าน";
+  } else if (password.value.length < 8) {
     errors.password = "รหัสผ่านต้องอย่างน้อย 8 ตัวอักษร";
   }
-  if (!inviteCode.value.trim()) errors.inviteCode = "กรุณากรอก invite code";
+
+  if (!inviteCode.value.trim()) {
+    errors.inviteCode = "กรุณากรอก invite code";
+  }
 
   return errors;
 });
 
+const fieldErrors = computed(() => ({
+  name: clientFieldErrors.value.name || serverFieldErrors.value.name,
+  phone: clientFieldErrors.value.phone || serverFieldErrors.value.phone,
+  email: clientFieldErrors.value.email || serverFieldErrors.value.email,
+  password:
+    clientFieldErrors.value.password || serverFieldErrors.value.password,
+  inviteCode:
+    clientFieldErrors.value.inviteCode || serverFieldErrors.value.inviteCode,
+}));
+
 const hasClientError = computed(() =>
-  Object.values(fieldErrors.value).some((value) => !!value),
+  Object.values(clientFieldErrors.value).some(Boolean),
 );
+
+watch(name, () => {
+  serverFieldErrors.value.name = null;
+});
+watch(phone, () => {
+  serverFieldErrors.value.phone = null;
+});
+watch(email, () => {
+  serverFieldErrors.value.email = null;
+});
+watch(password, () => {
+  serverFieldErrors.value.password = null;
+});
+watch(inviteCode, () => {
+  serverFieldErrors.value.inviteCode = null;
+});
 
 async function submit() {
   hasSubmitted.value = true;
-  serverError.value = null;
+  sessionError.value = null;
   successMessage.value = null;
-  if (hasClientError.value) return;
+  serverFieldErrors.value = {
+    name: null,
+    phone: null,
+    email: null,
+    password: null,
+    inviteCode: null,
+  };
+
+  if (hasClientError.value) {
+    showCustomToast({
+      variant: "error",
+      title: "ข้อมูลไม่ถูกต้อง",
+    });
+    return;
+  }
 
   isSubmitting.value = true;
   try {
@@ -72,8 +140,12 @@ async function submit() {
     successMessage.value = "สมัครแอดมินสำเร็จ";
     router.replace("/admin/category");
   } catch (error) {
-    serverError.value =
-      error instanceof Error ? error.message : "สมัครแอดมินไม่สำเร็จ";
+    const errorState = getAdminRegisterErrorState(error);
+    serverFieldErrors.value = errorState.fieldErrors;
+    showCustomToast({
+      variant: "error",
+      title: errorState.toastMessage,
+    });
   } finally {
     isSubmitting.value = false;
   }
@@ -93,7 +165,7 @@ onMounted(async () => {
       router.replace("/admin/category");
     }
   } catch (error) {
-    serverError.value =
+    sessionError.value =
       error instanceof Error ? error.message : "ไม่สามารถยืนยันสิทธิ์แอดมินได้";
   } finally {
     isCheckingSession.value = false;
@@ -159,11 +231,11 @@ onMounted(async () => {
           />
         </div>
 
-        <div v-if="serverError" class="style-body-4 text-red">
-          {{ serverError }}
-        </div>
         <div v-if="successMessage" class="style-body-4 text-green-900">
           {{ successMessage }}
+        </div>
+        <div v-if="sessionError" class="style-body-4 text-red">
+          {{ sessionError }}
         </div>
         <div v-if="isCheckingSession" class="style-body-4 text-gray-700">
           กำลังตรวจสอบเซสชันแอดมิน...
