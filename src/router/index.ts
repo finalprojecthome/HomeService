@@ -1,14 +1,24 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../pages/Home.vue";
 import UI from "../pages/UI.vue";
+import {
+  clearAdminAccessToken,
+  fetchAdminMe,
+  getAdminAccessToken,
+  initializeAdminAuthSession,
+} from "../services/adminAuth";
 import ServiceList from "../pages/ServiceList.vue";
 import AccountStubPage from "../pages/AccountStubPage.vue";
-import { useAuthStore } from "../stores";
-import { showCustomToast } from "../utils/toast";
+import AdminRegister from "../pages/Admin/Register.vue";
+import AdminLogin from "../pages/Admin/Login.vue";
+import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 
-// Lazy import
 const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
+const AdminCategoryList = () => import("../pages/Admin/AdminCategory/AdminCategoryList.vue");
+const AdminAddCategory = () => import("../pages/Admin/AdminCategory/AdminAddCategory.vue");
+const AdminDetailCategory = () => import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
+const AdminEditCategory = () => import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,11 +42,7 @@ const router = createRouter({
       path: "/profile",
       name: "profile",
       component: AccountStubPage,
-      meta: {
-        title: "ข้อมูลผู้ใช้งาน",
-        requiresAuth: true,
-        roles: ["user"],
-      },
+      meta: { title: "ข้อมูลผู้ใช้งาน" },
     },
     {
       path: "/repair-orders",
@@ -54,10 +60,7 @@ const router = createRouter({
       path: "/auth/login",
       name: "login",
       component: Login,
-      meta: {
-        title: "เข้าสู่ระบบ",
-        requiresGuest: true,
-      },
+      meta: { title: "เข้าสู่ระบบ" },
     },
     {
       path: "/login",
@@ -67,48 +70,89 @@ const router = createRouter({
       path: "/auth/register",
       name: "register",
       component: Register,
-      meta: {
-        title: "ลงทะเบียน",
-        requiresGuest: true,
-      },
+      meta: { title: "ลงทะเบียน" },
     },
     {
       path: "/register",
       redirect: "/auth/register",
     },
+    {
+      path: "/auth/admin/register",
+      name: "admin-register",
+      component: AdminRegister,
+    },
+    {
+      path: "/auth/admin/login",
+      name: "admin-login",
+      component: AdminLogin,
+    },
+    {
+      path: "/admin/category",
+      name: "admin-category",
+      component: AdminCategory,
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: "",
+          name: "admin-category-list",
+          component: AdminCategoryList,
+        },
+        {
+          path: "add",
+          name: "admin-add-category",
+          component: AdminAddCategory,
+        },
+        {
+          path: ":id",
+          name: "admin-detail-category",
+          component: AdminDetailCategory,
+        },
+        {
+          path: ":id/edit",
+          name: "admin-edit-category",
+          component: AdminEditCategory,
+        },
+      ],
+    },
   ],
 });
 
-router.beforeEach(async (to, _from, next) => {
-  const authStore = useAuthStore();
-  await authStore.initializeAuth();
+router.beforeEach(async (to) => {
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
 
-  const isAuthenticated = Boolean(authStore.user);
-  const role = authStore.user?.role;
-
-  // Check if the route requires authentication
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: "login" });
+  if (!requiresAdmin) {
+    return true;
   }
 
-  if (to.meta.requiresGuest && isAuthenticated) {
-    return next({ name: "home" });
+  await initializeAdminAuthSession();
+  const token = await getAdminAccessToken();
+
+  if (!token) {
+    return {
+      name: "admin-login",
+      query: { redirect: to.fullPath },
+    };
   }
 
-  // Check if the route has role restrictions
-  if (to.meta.requiresAuth && to.meta.roles && role) {
-    const roles = to.meta.roles as string[];
-    if (!roles.includes(role)) {
-      showCustomToast({
-        variant: "error",
-        title: "ไม่สามารถเข้าถึงหน้านี้",
-        description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
-      });
-      return next({ name: "home" });
+  try {
+    const admin = await fetchAdminMe();
+
+    if (admin.role !== "admin") {
+      clearAdminAccessToken();
+      return {
+        name: "admin-login",
+        query: { redirect: to.fullPath },
+      };
     }
-  }
 
-  next();
+    return true;
+  } catch {
+    clearAdminAccessToken();
+    return {
+      name: "admin-login",
+      query: { redirect: to.fullPath },
+    };
+  }
 });
 
 export default router;

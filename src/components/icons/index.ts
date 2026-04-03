@@ -31,4 +31,8 @@ export {
   ClockIcon,
   CloseIcon,
   WrenchIcon,
+  SearchIcon,
+  categoryIcon,
+  serviceIcon,
+  promotionCodeIcon,
 } from "./icons";
