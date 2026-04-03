@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import axios from "axios";
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import houseIcon from "../../assets/icon/house.png";
 import ActionButton from "../../components/ui/ActionButton.vue";
 import TextInput from "../../components/ui/TextInput.vue";
-import houseIcon from "../../assets/icon/house.png";
+import { loginAdmin, setAdminAccessToken } from "../../services/adminAuth";
+
+const router = useRouter();
 
 const email = ref("");
 const password = ref("");
@@ -13,15 +18,18 @@ const hasSubmitted = ref(false);
 
 const fieldErrors = computed(() => {
   const errors: Record<string, string | null> = { email: null, password: null };
+
   if (!email.value.trim()) errors.email = "กรุณากรอกอีเมล";
-  if (email.value && !/^\S+@\S+\.\S+$/.test(email.value))
+  if (email.value && !/^\S+@\S+\.\S+$/.test(email.value)) {
     errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+  }
   if (!password.value) errors.password = "กรุณากรอกรหัสผ่าน";
+
   return errors;
 });
 
 const hasClientError = computed(() =>
-  Object.values(fieldErrors.value).some((v) => !!v),
+  Object.values(fieldErrors.value).some((value) => !!value),
 );
 
 async function submit() {
@@ -31,9 +39,20 @@ async function submit() {
 
   isSubmitting.value = true;
   try {
-    // NOTE: ยังไม่ได้เชื่อม API login ใน step นี้ (ทำเฉพาะหน้า UI ตามที่ขอ)
-    await new Promise((r) => setTimeout(r, 300));
-    serverError.value = "ยังไม่ได้เชื่อมระบบล็อกอิน (จะทำใน step ถัดไป)";
+    const data = await loginAdmin({
+      email: email.value.trim(),
+      password: password.value,
+    });
+
+    setAdminAccessToken(data.accessToken);
+    router.push("/profile");
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      serverError.value =
+        error.response?.data?.message || "ไม่สามารถเข้าสู่ระบบได้";
+    } else {
+      serverError.value = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -42,7 +61,7 @@ async function submit() {
 
 <template>
   <div
-    class="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10 flex flex-col gap-[35px]"
+    class="min-h-screen flex items-center justify-center px-4 py-10 flex flex-col gap-[35px]"
   >
     <div
       class="flex items-center gap-[17px] text-[52px] font-weight-500 text-blue-600"
@@ -73,7 +92,7 @@ async function submit() {
             v-model="password"
             label="Password"
             type="password"
-            placeholder="รหัสผ่าน"
+            placeholder="password"
             autocomplete="current-password"
             :required="true"
             :error="hasSubmitted ? fieldErrors.password : null"
@@ -97,12 +116,13 @@ async function submit() {
 
           <div class="flex items-center gap-2 style-body-3 text-gray-700">
             <span>ยังไม่มีบัญชี?</span>
-            <router-link
-              to="/admin/register"
-              class="style-button text-blue-600 hover:text-blue-400 active:text-blue-800"
+            <button
+              type="button"
+              class="style-button text-blue-600 hover:text-blue-400 active:text-blue-800 cursor-pointer"
+              @click="router.push('/auth/admin/register')"
             >
               สมัครแอดมิน
-            </router-link>
+            </button>
           </div>
         </div>
       </form>
