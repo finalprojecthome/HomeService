@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import cn from "../../utils/cn";
 import Narbar from "./Narbar.vue";
-import Footer from "../Footer.vue";
+import Footer from "./Footer.vue";
 
 const props = defineProps<{ class?: string }>();
 </script>
