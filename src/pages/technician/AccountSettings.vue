@@ -34,8 +34,40 @@ const handleConfirm = () => {
   // Submit logic
 };
 
+const isRefreshingLocation = ref(false);
+
 const handleRefreshLocation = () => {
-  console.log('Refreshing location...');
+  isRefreshingLocation.value = true;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        try {
+          // Use OpenStreetMap's free Nominatim API to get real address
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`);
+          const data = await res.json();
+          if (data && data.display_name) {
+            formData.value.address = data.display_name;
+          } else {
+            formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          }
+        } catch (e) {
+          console.error("Geocoding error", e);
+          formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+        isRefreshingLocation.value = false;
+      },
+      (error) => {
+        console.error("Error getting location: ", error);
+        alert("ไม่สามารถเข้าถึงตำแหน่งได้: กรุณาอนุญาตการเข้าถึง Location ใน Browser");
+        isRefreshingLocation.value = false;
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by this browser.");
+    isRefreshingLocation.value = false;
+  }
 };
 </script>
 
@@ -85,9 +117,10 @@ const handleRefreshLocation = () => {
             <input 
               v-model="formData.address" 
               type="text" 
-              class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+              readonly
+              class="w-full max-w-md border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed rounded-lg px-4 py-2 style-body-1 focus:outline-none" 
             />
-            <ActionButton variant="secondary" @click="handleRefreshLocation">รีเฟรช</ActionButton>
+            <ActionButton variant="secondary" @click="handleRefreshLocation" :disabled="isRefreshingLocation">{{ isRefreshingLocation ? 'กำลังค้นหา...' : 'รีเฟรช' }}</ActionButton>
           </div>
         </div>
       </section>

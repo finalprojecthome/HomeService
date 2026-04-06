@@ -112,14 +112,12 @@ const router = createRouter({
       path: "/auth/login",
       name: "login",
       component: Login,
-      meta: {
-        title: "เข้าสู่ระบบ",
-        requiresGuest: true,
-      },
+      meta: { title: "เข้าสู่ระบบ" },
     },
     {
       path: '/technician',
       component: TechnicianLayout,
+      meta: { requiresTechnician: true },
       redirect: '/technician/requests',
       children: [
         {
@@ -154,6 +152,7 @@ const router = createRouter({
         }
       ]
     },
+
     {
       path: "/login",
       redirect: "/auth/login",
@@ -218,87 +217,86 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, _from) => {
+router.beforeEach(async (to, _from, next) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const requiresTechnician = to.matched.some((record) => record.meta.requiresTechnician);
 
-
-  if (requiresAuth) {
-    const token = localStorage.getItem("accessToken");
-
-
-    if (!token) {
-      return {
-        name: "login",
-        query: { redirect: to.fullPath },
-      };
-    }
-  }
-
+  // 1. Handle Admin Authentication
   if (requiresAdmin) {
     await initializeAdminAuthSession();
     const token = await getAdminAccessToken();
 
     if (!token) {
-      return {
+      return next({
         name: "admin-login",
         query: { redirect: to.fullPath },
-      };
+      });
     }
 
     try {
       const admin = await fetchAdminMe();
-
       if (admin.role !== "admin") {
         clearAdminAccessToken();
-        return {
+        return next({
           name: "admin-login",
           query: { redirect: to.fullPath },
-        };
+        });
       }
-
-      return true;
+      return next();
     } catch {
       clearAdminAccessToken();
-      return {
+      return next({
         name: "admin-login",
         query: { redirect: to.fullPath },
-      };
+      });
     }
-  } else {
-    const authStore = useAuthStore();
-    await authStore.initializeAuth();
+  }
 
-    const isAuthenticated = Boolean(authStore.user);
-    const role = authStore.user?.role;
+  // 2. Handle Technician Authentication
+  if (requiresTechnician) {
+    const token = localStorage.getItem("accessToken");
+    const role = localStorage.getItem("userRole");
 
-    // Check if the route requires authentication
-    if (to.meta.requiresAuth && !isAuthenticated) {
-      return {
+    if (!token || role !== "technician") {
+      alert("กรุณาเข้าสู่ระบบด้วยบัญชีช่าง (Technician) เพื่อเข้าถึงส่วนนี้");
+      return next({
         name: "login",
         query: { redirect: to.fullPath },
-      };
+      });
     }
-
-    if (to.meta.requiresGuest && isAuthenticated) {
-      return { name: "home" };
-    }
-
-    // Check if the route has role restrictions
-    if (to.meta.requiresAuth && to.meta.roles && role) {
-      const roles = to.meta.roles as string[];
-      if (!roles.includes(role)) {
-        showCustomToast({
-          variant: "error",
-          title: "ไม่สามารถเข้าถึงหน้านี้",
-          description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
-        });
-        return { name: "home" };
-      }
-    }
-
-    return true;
+    return next();
   }
+
+  // 3. Handle Regular User Authentication
+  const authStore = useAuthStore();
+  await authStore.initializeAuth();
+
+  const isAuthenticated = Boolean(authStore.user);
+  const role = authStore.user?.role;
+
+  // Check if the route requires authentication
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next({ name: "login" });
+  }
+
+  if (to.meta.requiresGuest && isAuthenticated) {
+    return next({ name: "home" });
+  }
+
+  // Check if the route has role restrictions
+  if (to.meta.requiresAuth && to.meta.roles && role) {
+    const roles = to.meta.roles as string[];
+    if (!roles.includes(role)) {
+      showCustomToast({
+        variant: "error",
+        title: "ไม่สามารถเข้าถึงหน้านี้",
+        description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
+      });
+      return next({ name: "home" });
+    }
+  }
+
+  next();
 });
 
 export default router;

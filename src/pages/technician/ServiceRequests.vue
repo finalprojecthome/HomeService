@@ -43,10 +43,21 @@ const handleRefreshLocation = () => {
   isRefreshingLocation.value = true;
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        // Mock updating the location text using coordinates
-        console.log("Got coordinates:", position.coords.latitude, position.coords.longitude);
-        currentLocationStr.value = "อัปเดตตำแหน่งล่าสุดสำเร็จ (Mock)"; // In a real app we'd reverse-geocode this
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`);
+          const data = await res.json();
+          if (data && data.display_name) {
+             currentLocationStr.value = data.display_name;
+          } else {
+             currentLocationStr.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          }
+        } catch (e) {
+          console.error("Geocoding error", e);
+          currentLocationStr.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
         isRefreshingLocation.value = false;
       },
       (error) => {
@@ -152,8 +163,8 @@ const openMap = (location: string) => {
   </div>
 
   <!-- Confirmation Modal -->
-  <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-    <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-xl flex flex-col items-center relative">
+  <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col items-center relative border border-gray-100 pointer-events-auto">
       <!-- Close icon top right -->
       <button @click="cancelAccept" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
