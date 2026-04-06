@@ -39,10 +39,10 @@ const sidebarclass =
     </div>
     <section>
       <div
-        class="flex xl:flex-row flex-col px-4 pb-12 md:px-40 lg:px-40 xl:px-40 xl:pt-6 xl:pb-20 2xl:px-40 3xl:px-80 justify-center gap-9 w-full mx-auto"
+        class="flex xl:flex-row flex-col pb-12 md:px-40 lg:px-40 xl:px-40 xl:pt-6 xl:pb-20 2xl:px-40 3xl:px-80 justify-center gap-9 w-full mx-auto"
       >
         <UserBox :sidebar-items="sidebarItems" :sidebar-class="sidebarclass" />
-        <div class="flex flex-col gap-4 flex-1">
+        <div class="flex flex-col gap-4 flex-1 mx-4 xl:mx-0">
           <template v-if="route.path === '/repair-orders'">
             <ServiceOrderCard
               orderId="AD04071205"

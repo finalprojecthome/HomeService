@@ -28,7 +28,7 @@ const { scrollDirection } = useScrollState();
     "
   >
     <div
-      class="flex flex-col xl:py-8 py-2 xl:px-6 px-4 xl:w-[253px] xl:h-[252px] bg-white rounded-card-box border border-gray-300 opacity-95 md:opacity-100"
+      class="flex flex-col xl:py-8 py-2 xl:px-6 px-4 mx-4 xl:mx-0 xl:w-[253px] xl:h-[252px] bg-white rounded-card-box border border-gray-300 opacity-95 md:opacity-100"
     >
       <h3 class="style-headline-3 text-gray-900 border-b border-gray-300 pb-5">
         บัญชีผู้ใช้
