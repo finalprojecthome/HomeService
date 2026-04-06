@@ -2,10 +2,11 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import { UserIcon, List, History } from "../components/icons";
+import { UserIcon, List, History, Pencil, TagIcon } from "../components/icons";
 import UserBox from "../components/UserBox.vue";
 import ServiceOrderCard from "../components/ServiceOrderCard.vue";
 import EditProfileForm from "../components/profile/EditProfileForm.vue";
+import ResetPasswordForm from "../components/profile/ResetPasswordForm.vue";
 const route = useRoute();
 
 const title = computed(() => String(route.meta.title ?? ""));
@@ -16,6 +17,11 @@ const sidebarItems = [
     path: "/profile",
   },
   {
+    icon: TagIcon,
+    label: "ข้อมูลที่อยู่",
+    path: "/address",
+  },
+  {
     icon: List,
     label: "รายการคำสั่งซ่อม",
     path: "/repair-orders",
@@ -24,6 +30,11 @@ const sidebarItems = [
     icon: History,
     label: "ประวัติการซ่อม",
     path: "/repair-history",
+  },
+  {
+    icon: Pencil,
+    label: "เปลี่ยนรหัสผ่าน",
+    path: "/reset-password",
   },
 ];
 const sidebarclass =
@@ -43,7 +54,10 @@ const sidebarclass =
       >
         <UserBox :sidebar-items="sidebarItems" :sidebar-class="sidebarclass" />
         <div class="flex flex-col gap-4 flex-1 mx-4 xl:mx-0">
-          <template v-if="route.path === '/repair-orders'">
+          <template v-if="route.path === '/profile'">
+            <EditProfileForm />
+          </template>
+          <template v-else-if="route.path === '/repair-orders'">
             <ServiceOrderCard
               orderId="AD04071205"
               status="pending"
@@ -72,8 +86,8 @@ const sidebarclass =
               :items="['ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง']"
             />
           </template>
-          <template v-if="route.path === '/profile'">
-            <EditProfileForm />
+          <template v-else-if="route.path === '/reset-password'">
+            <ResetPasswordForm />
           </template>
         </div>
       </div>

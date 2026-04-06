@@ -3,6 +3,8 @@ import type {
   LoginResponse,
   RegisterFormValues,
   RegisterResponse,
+  ResetPasswordPayload,
+  ResetPasswordResponse,
 } from "../../types/auth";
 import type { User } from "../../types/user";
 import { privateApi, publicApi } from "../client";
@@ -18,6 +20,14 @@ const authApi = {
 
   getUser: async (): Promise<User> => {
     return privateApi.get("/auth/get-user").then((res) => res.data);
+  },
+
+  resetPassword: async (
+    data: ResetPasswordPayload,
+  ): Promise<ResetPasswordResponse> => {
+    return privateApi
+      .put<ResetPasswordResponse>("/auth/reset-password", data)
+      .then((res) => res.data);
   },
 };
 

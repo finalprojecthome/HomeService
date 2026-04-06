@@ -12,13 +12,19 @@ import AccountStubPage from "../pages/AccountStubPage.vue";
 import AdminRegister from "../pages/Admin/Register.vue";
 import AdminLogin from "../pages/Admin/Login.vue";
 import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
+import { useAuthStore } from "../stores";
+import { showCustomToast } from "../utils/toast";
 
 const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
-const AdminCategoryList = () => import("../pages/Admin/AdminCategory/AdminCategoryList.vue");
-const AdminAddCategory = () => import("../pages/Admin/AdminCategory/AdminAddCategory.vue");
-const AdminDetailCategory = () => import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
-const AdminEditCategory = () => import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
+const AdminCategoryList = () =>
+  import("../pages/Admin/AdminCategory/AdminCategoryList.vue");
+const AdminAddCategory = () =>
+  import("../pages/Admin/AdminCategory/AdminAddCategory.vue");
+const AdminDetailCategory = () =>
+  import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
+const AdminEditCategory = () =>
+  import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -42,25 +48,60 @@ const router = createRouter({
       path: "/profile",
       name: "profile",
       component: AccountStubPage,
-      meta: { title: "ข้อมูลผู้ใช้งาน" },
+      meta: {
+        title: "ข้อมูลผู้ใช้งาน",
+        requiresAuth: true,
+        roles: ["user"],
+      },
+    },
+    {
+      path: "/address",
+      name: "address",
+      component: AccountStubPage,
+      meta: {
+        title: "ข้อมูลที่อยู่",
+        requiresAuth: true,
+        roles: ["user"],
+      },
     },
     {
       path: "/repair-orders",
       name: "repairOrders",
       component: AccountStubPage,
-      meta: { title: "รายการคำสั่งซ่อม" },
+      meta: {
+        title: "รายการคำสั่งซ่อม",
+        requiresAuth: true,
+        roles: ["user"],
+      },
     },
     {
       path: "/repair-history",
       name: "repairHistory",
       component: AccountStubPage,
-      meta: { title: "ประวัติการซ่อม" },
+      meta: {
+        title: "ประวัติการซ่อม",
+        requiresAuth: true,
+        roles: ["user"],
+      },
+    },
+    {
+      path: "/reset-password",
+      name: "resetPassword",
+      component: AccountStubPage,
+      meta: {
+        title: "เปลี่ยนรหัสผ่าน",
+        requiresAuth: true,
+        roles: ["user"],
+      },
     },
     {
       path: "/auth/login",
       name: "login",
       component: Login,
-      meta: { title: "เข้าสู่ระบบ" },
+      meta: {
+        title: "เข้าสู่ระบบ",
+        requiresGuest: true,
+      },
     },
     {
       path: "/login",
@@ -70,7 +111,10 @@ const router = createRouter({
       path: "/auth/register",
       name: "register",
       component: Register,
-      meta: { title: "ลงทะเบียน" },
+      meta: {
+        title: "ลงทะเบียน",
+        requiresGuest: true,
+      },
     },
     {
       path: "/register",
@@ -117,41 +161,69 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, _from, next) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
 
-  if (!requiresAdmin) {
-    return true;
-  }
+  if (requiresAdmin) {
+    await initializeAdminAuthSession();
+    const token = await getAdminAccessToken();
 
-  await initializeAdminAuthSession();
-  const token = await getAdminAccessToken();
-
-  if (!token) {
-    return {
-      name: "admin-login",
-      query: { redirect: to.fullPath },
-    };
-  }
-
-  try {
-    const admin = await fetchAdminMe();
-
-    if (admin.role !== "admin") {
-      clearAdminAccessToken();
+    if (!token) {
       return {
         name: "admin-login",
         query: { redirect: to.fullPath },
       };
     }
 
-    return true;
-  } catch {
-    clearAdminAccessToken();
-    return {
-      name: "admin-login",
-      query: { redirect: to.fullPath },
-    };
+    try {
+      const admin = await fetchAdminMe();
+
+      if (admin.role !== "admin") {
+        clearAdminAccessToken();
+        return {
+          name: "admin-login",
+          query: { redirect: to.fullPath },
+        };
+      }
+
+      return true;
+    } catch {
+      clearAdminAccessToken();
+      return {
+        name: "admin-login",
+        query: { redirect: to.fullPath },
+      };
+    }
+  } else {
+    const authStore = useAuthStore();
+    await authStore.initializeAuth();
+
+    const isAuthenticated = Boolean(authStore.user);
+    const role = authStore.user?.role;
+
+    // Check if the route requires authentication
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      return next({ name: "login" });
+    }
+
+    if (to.meta.requiresGuest && isAuthenticated) {
+      return next({ name: "home" });
+    }
+
+    // Check if the route has role restrictions
+    if (to.meta.requiresAuth && to.meta.roles && role) {
+      const roles = to.meta.roles as string[];
+      if (!roles.includes(role)) {
+        showCustomToast({
+          variant: "error",
+          title: "ไม่สามารถเข้าถึงหน้านี้",
+          description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
+        });
+        return next({ name: "home" });
+      }
+    }
+
+    next();
   }
 });
 
