@@ -1,14 +1,8 @@
+import type {
+  UpdateProfilePayload,
+  UpdateProfileResponse,
+} from "../../types/user";
 import { privateApi } from "../client";
-
-export interface UpdateProfileResponse {
-  message: string;
-}
-
-export interface UpdateProfilePayload {
-  fullname: string;
-  phone: string;
-  image?: File | Blob | null;
-}
 
 function appendImage(formData: FormData, image: File | Blob): void {
   if (image instanceof File) {

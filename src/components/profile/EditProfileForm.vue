@@ -51,47 +51,49 @@ const handleSubmit: SubmissionHandler = async (values) => {
 
 <template>
   <Form @submit="handleSubmit">
-    <fieldset :disabled="isSubmitting" class="flex flex-col gap-6 w-full">
+    <fieldset :disabled="isSubmitting" class="flex flex-col gap-6 max-w-120">
       <ImageUpload
         v-model="profileImageFile"
         :existing-url="authStore.user?.imgUrl ?? null"
         label="รูปโปรไฟล์"
         class="h-70 sm:w-70"
       />
-      <div class="flex flex-col gap-5">
-        <InputForm
-          name="fullname"
-          label="ชื่อ - นามสกุล"
-          type="text"
-          :value="authStore.user?.name"
-          placeholder="กรุณากรอกชื่อ นามสกุล"
-          autocomplete="name"
-          rules="fullname"
-          required
-        />
-        <InputForm
-          name="phone"
-          label="เบอร์โทรศัพท์"
-          type="text"
-          :value="authStore.user?.phone"
-          placeholder="กรุณากรอกเบอร์โทรศัพท์"
-          autocomplete="tel-national"
-          inputmode="tel"
-          rules="phone"
-          required
-        />
-        <InputForm
-          name="email"
-          label="อีเมล์"
-          type="email"
-          :value="authStore.user?.email"
-          placeholder="กรุณากรอกอีเมล"
-          autocomplete="email"
-          inputmode="email"
-          :disabled="true"
-        />
+      <div class="flex flex-col items-end gap-10">
+        <div class="flex flex-col w-full gap-5">
+          <InputForm
+            name="fullname"
+            label="ชื่อ - นามสกุล"
+            type="text"
+            :value="authStore.user?.name"
+            placeholder="กรุณากรอกชื่อ นามสกุล"
+            autocomplete="name"
+            rules="fullname"
+            required
+          />
+          <InputForm
+            name="phone"
+            label="เบอร์โทรศัพท์"
+            type="text"
+            :value="authStore.user?.phone"
+            placeholder="กรุณากรอกเบอร์โทรศัพท์"
+            autocomplete="tel-national"
+            inputmode="tel"
+            rules="phone"
+            required
+          />
+          <InputForm
+            name="email"
+            label="อีเมล์"
+            type="email"
+            :value="authStore.user?.email"
+            placeholder="กรุณากรอกอีเมล"
+            autocomplete="email"
+            inputmode="email"
+            :disabled="true"
+          />
+        </div>
+        <ActionButton type="submit" class="w-fit">แก้ไขข้อมูล</ActionButton>
       </div>
-      <ActionButton type="submit" class="w-full"> แก้ไขข้อมูล </ActionButton>
     </fieldset>
   </Form>
 </template>
