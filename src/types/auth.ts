@@ -20,3 +20,12 @@ export interface LoginResponse {
   message: string;
   accessToken: string;
 }
+
+export interface ResetPasswordPayload {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}

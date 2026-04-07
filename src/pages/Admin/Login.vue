@@ -150,7 +150,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center px-4 py-10 flex flex-col gap-[35px]"
+    class="min-h-screen flex items-center justify-center px-4 py-10 flex-col gap-[35px]"
   >
     <div
       class="flex items-center gap-[17px] text-[52px] font-weight-500 text-blue-600"

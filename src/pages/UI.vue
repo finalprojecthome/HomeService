@@ -44,8 +44,8 @@ import TimePicker from "../components/ui/TimePicker.vue";
 import Breadcrumb, {
   type BreadcrumbItem,
 } from "../components/ui/Breadcrumb.vue";
-import Footer from "../components/Footer.vue";
 import { showCustomToast } from "../utils/toast";
+import Footer from "../components/layouts/Footer.vue";
 
 const bookingTime = ref<string | null>(null);
 const bookingDate = ref<string | null>(null);

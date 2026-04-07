@@ -65,6 +65,7 @@ const inputRules = computed(() => {
         :autocomplete="props.autocomplete"
         :inputmode="props.inputmode"
         :isError="isFieldError"
+        :disabled="props.disabled"
         :class="props.class"
       />
     </Field>

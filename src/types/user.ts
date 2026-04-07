@@ -8,3 +8,13 @@ export interface User {
   imgUrl: string | null;
   role: Role;
 }
+
+export interface UpdateProfileResponse {
+  message: string;
+}
+
+export interface UpdateProfilePayload {
+  fullname: string;
+  phone: string;
+  image?: File | Blob | null;
+}

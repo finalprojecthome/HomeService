@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import cn from "../../utils/cn";
+import { AddImage } from "../icons";
 
 interface Props {
   modelValue?: File | null;
+  existingUrl?: string | null;
   label?: string;
   accept?: string;
   multiple?: boolean;
@@ -11,10 +13,12 @@ interface Props {
   disabled?: boolean;
   hint?: number;
   instruction?: string;
+  class?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
+  existingUrl: null,
   accept: "image/png,image/jpeg",
   multiple: false,
   maxSizeMb: 10,
@@ -34,6 +38,16 @@ const isDragOver = ref(false);
 const previewUrl = ref<string | null>(null);
 const errorMessage = ref("");
 const hasError = ref(false);
+
+const displayUrl = computed(() => {
+  if (previewUrl.value) return previewUrl.value;
+  const url = props.existingUrl?.trim();
+  return url && url.length > 0 ? url : null;
+});
+
+const previewImageAlt = computed(() =>
+  previewUrl.value ? "Profile photo preview" : "Current profile photo",
+);
 
 function triggerFileInput() {
   if (!props.disabled) fileInputRef.value?.click();
@@ -98,9 +112,9 @@ function removeFile() {
 
 <template>
   <div class="flex flex-col gap-[8px] min-w-[240px] w-full">
-    <label v-if="label" class="style-headline-5 text-gray-900">{{
-      label
-    }}</label>
+    <label v-if="label" class="style-headline-5 text-gray-900">
+      {{ label }}
+    </label>
     <div
       class="relative rounded-xl border-2 border-dashed min-h-[160px] flex items-center justify-center cursor-pointer transition-all duration-200"
       :class="
@@ -111,6 +125,7 @@ function removeFile() {
             : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/40',
           hasError ? 'border-red-400' : '',
           disabled ? 'opacity-50 cursor-not-allowed' : '',
+          props.class,
         )
       "
       @dragover.prevent="handleDragOver"
@@ -118,17 +133,18 @@ function removeFile() {
       @drop.prevent="handleDrop"
       @click="triggerFileInput"
     >
-      <!-- Preview -->
+      <!-- Preview (new file or existing URL) -->
       <div
-        v-if="previewUrl"
+        v-if="displayUrl"
         class="relative w-full h-full min-h-[120px] flex items-center justify-center p-4"
       >
         <img
-          :src="previewUrl"
-          alt="Preview"
+          :src="displayUrl"
+          :alt="previewImageAlt"
           class="max-w-full max-h-[200px] object-contain rounded-lg"
         />
         <button
+          v-if="previewUrl"
           type="button"
           class="absolute -top-2 -right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors duration-150 shadow-sm cursor-pointer"
           @click.stop="removeFile"
@@ -151,43 +167,7 @@ function removeFile() {
         class="flex flex-col items-center gap-2 text-center px-6 py-8"
       >
         <div class="text-gray-400 mb-1">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="text-gray-400"
-          >
-            <path
-              d="M26 8H12C9.79086 8 8 9.79086 8 12V36C8 38.2091 9.79086 40 12 40H36C38.2091 40 40 38.2091 40 36V22"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M8 32.5L16.5 24C17.8807 22.6193 20.1193 22.6193 21.5 24L32 34.5"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M26 28.5L29.5 25C30.8807 23.6193 33.1193 23.6193 34.5 25L40 30.5"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="25" cy="17" r="2.5" fill="currentColor" />
-            <path
-              d="M38 6V14M34 10H42"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            />
-          </svg>
+          <AddImage :size="40" />
         </div>
         <p class="style-body-3 text-gray-700 leading-relaxed">
           <span
