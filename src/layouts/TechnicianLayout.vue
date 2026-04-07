@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter, useRoute, RouterView } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, RouterView } from 'vue-router';
 import Sidebar from '../components/Sidebar.vue';
 import {
   NotificationIcon,
@@ -9,16 +9,33 @@ import {
   UserIcon,
   Logout
 } from '../components/icons';
+import technicianApi from '../services/api/technician';
 
 const router = useRouter();
-const route = useRoute();
 
-const sidebarLinks = [
-  { id: 1, title: 'คำขอบริการซ่อม', icon: NotificationIcon, badge: 3, path: '/technician/requests' },
+const availableJobsCount = ref(0);
+
+const fetchJobsCount = async () => {
+  try {
+    const jobs = await technicianApi.getAvailableJobs();
+    availableJobsCount.value = jobs.length;
+  } catch (error) {
+    console.error("Failed to load available jobs count:", error);
+  }
+};
+
+onMounted(() => {
+  fetchJobsCount();
+  // Optionally poll the count every 30 seconds
+  setInterval(fetchJobsCount, 30000);
+});
+
+const sidebarLinks = computed(() => [
+  { id: 1, title: 'คำขอบริการซ่อม', icon: NotificationIcon, badge: availableJobsCount.value, path: '/technician/requests' },
   { id: 2, title: 'รายการที่รอดำเนินการ', icon: List, path: '/technician/pending' },
   { id: 3, title: 'ประวัติการซ่อม', icon: History, path: '/technician/history' },
   { id: 4, title: 'ตั้งค่าบัญชีผู้ใช้', icon: UserIcon, path: '/technician/settings' },
-];
+]);
 
 const bottomLink = { id: 5, title: 'ออกจากระบบ', icon: Logout, path: '/' };
 

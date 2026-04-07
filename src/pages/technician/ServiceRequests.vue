@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import CardRequest from '../../components/CardRequest.vue';
 import ActionButton from '../../components/ui/ActionButton.vue';
+import technicianApi from '../../services/api/technician';
+import { showCustomToast } from '../../utils/toast';
 
 // Define the shape of our request item
 interface RequestItem {
@@ -14,30 +16,52 @@ interface RequestItem {
   location: string;
 }
 
-const requestsList = ref<RequestItem[]>([
-  {
-    id: 'AD04071205',
-    title: 'ล้างแอร์',
-    dateStr: '25/04/2563',
-    time: '13.00',
-    serviceName: 'ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง',
-    price: '1,550.00',
-    location: '444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ',
-  },
-  {
-    id: 'AD04071206',
-    title: 'ล้างแอร์',
-    dateStr: '26/04/2563',
-    time: '10.00',
-    serviceName: 'ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง',
-    price: '1,550.00',
-    location: '444/4 คอนโดศุภาลัย เสนานิคม จตุจักร กรุงเทพฯ',
+const requestsList = ref<RequestItem[]>([]);
+const isLoading = ref(true);
+
+const loadJobs = async () => {
+  isLoading.value = true;
+  try {
+    const jobs = await technicianApi.getAvailableJobs();
+    requestsList.value = jobs.map(job => {
+      const dateObj = new Date(job.scheduledAt || new Date().toISOString());
+      return {
+        id: job.orderId,
+        title: job.serviceItems && job.serviceItems.length > 0 ? job.serviceItems[0] : 'บริการซ่อม',
+        dateStr: dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+        time: dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        serviceName: job.serviceItems ? job.serviceItems.join(', ') : '',
+        price: job.totalPrice ? job.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00',
+        location: job.addressDetail || 'ไม่ระบุที่อยู่',
+      };
+    });
+  } catch (error) {
+    showCustomToast({ variant: 'error', title: 'ข้อผิดพลาด', description: 'ไม่สามารถโหลดคำขอบริการซ่อมได้' });
+  } finally {
+    isLoading.value = false;
   }
-]);
+};
+
+onMounted(() => {
+  loadJobs();
+});
 
 // Location state
-const currentLocationStr = ref('332 อาคารพาณิชย์ ถนนรามคำแหง แขวงหัวหมาก เขตบางกะปิ กรุงเทพฯ');
+const currentLocationStr = ref('กำลังโหลด...');
 const isRefreshingLocation = ref(false);
+
+const loadTechnicianLocation = async () => {
+  try {
+    const profile = await technicianApi.getProfile();
+    currentLocationStr.value = profile.addressDetail || '332 อาคารพาณิชย์ ถนนรามคำแหง แขวงหัวหมาก เขตบางกะปิ กรุงเทพฯ';
+  } catch (e) {
+    currentLocationStr.value = 'ไม่สามารถดึงตำแหน่งปัจจุบันได้';
+  }
+};
+
+onMounted(() => {
+    loadTechnicianLocation();
+});
 
 const handleRefreshLocation = () => {
   isRefreshingLocation.value = true;
@@ -88,12 +112,18 @@ const triggerAccept = (id: string) => {
   }
 };
 
-const confirmAccept = () => {
+const confirmAccept = async () => {
   if (selectedRequest.value) {
-    // Simulate accepting and moving to pending queue
-    requestsList.value = requestsList.value.filter(req => req.id !== selectedRequest.value!.id);
-    showConfirmModal.value = false;
-    selectedRequest.value = null;
+    try {
+        await technicianApi.acceptJob(selectedRequest.value.id);
+        showCustomToast({ title: 'สำเร็จ', description: 'รับงานสำเร็จแล้ว' });
+        loadJobs(); // Refresh jobs list
+    } catch (err) {
+        showCustomToast({ variant: 'error', title: 'ข้อผิดพลาด', description: 'ไม่สามารถรับงานได้' });
+    } finally {
+        showConfirmModal.value = false;
+        selectedRequest.value = null;
+    }
   }
 };
 

@@ -1,54 +1,57 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import FilterBar from '../../components/FilterBar.vue';
 import Table from '../../components/ui/Table.vue';
-import { DetailIcon } from '../../components/icons'; // placeholder for Action Icon
+import { DetailIcon } from '../../components/icons';
+import technicianApi from '../../services/api/technician';
 
 const router = useRouter();
 
 // Filter parameters
 const query = ref('');
 const service = ref('');
-const date = ref(''); // Mocking date filter if needed in FilterBar
-
 const serviceOptions = [
   { value: '', label: 'ทั้งหมด' },
-  { value: 'cleaning', label: 'ทำความสะอาดทั่วไป' },
-  { value: 'air', label: 'ล้างแอร์' }
+  { value: 'ล้างแอร์', label: 'ล้างแอร์' },
+  { value: 'ทำความสะอาดทั่วไป', label: 'ทำความสะอาดทั่วไป' },
+  { value: 'ซ่อมแอร์', label: 'ซ่อมแอร์' },
+  { value: 'ซ่อมเครื่องซักผ้า', label: 'ซ่อมเครื่องซักผ้า' },
+  { value: 'ติดตั้งเครื่องดูดควัน', label: 'ติดตั้งเครื่องดูดควัน' },
+  { value: 'ติดตั้งเครื่องทำน้ำอุ่น', label: 'ติดตั้งเครื่องทำน้ำอุ่น' }
 ];
 
-const dateOptions = [
-  { value: '', label: 'วันนี้' },
-  { value: 'week', label: 'สัปดาห์นี้' },
-  { value: 'month', label: 'เดือนนี้' }
-];
+// Data state
+const allJobs = ref<any[]>([]);
 
-// Mock data
-const mockHistoryOrders = [
-  {
-    id: 'AD04071205',
-    serviceTitle: 'ล้างแอร์',
-    date: '25/04/2563 เวลา 13.00 น.',
-    price: '1,550.00 ฿'
-  },
-  {
-    id: 'AD04071206',
-    serviceTitle: 'ทำความสะอาดทั่วไป',
-    date: '24/04/2563 เวลา 10.00 น.',
-    price: '750.00 ฿'
-  },
-  {
-    id: 'AD04071207',
-    serviceTitle: 'ล้างแอร์',
-    date: '23/04/2563 เวลา 13.00 น.',
-    price: '1,550.00 ฿'
-  }
-];
-
-const handleSearch = () => {
-  console.log('Search triggered', { query: query.value, service: service.value, date: date.value });
+const loadJobs = async () => {
+    try {
+        const jobs = await technicianApi.getMyJobs();
+        // History tasks include COMPLETED, COMPLETED_BY_TECHNICIAN, etc.
+        allJobs.value = jobs.filter(j => ['COMPLETED'].includes(j.status));
+    } catch (e) {
+        console.error("Failed to load history jobs", e);
+    }
 };
+
+onMounted(() => {
+    loadJobs();
+});
+
+const displayOrders = computed(() => {
+    return allJobs.value.map(job => {
+        const dateObj = new Date(job.scheduledAt || new Date().toISOString());
+        return {
+            id: job.orderId,
+            serviceTitle: job.serviceItems && job.serviceItems.length > 0 ? job.serviceItems[0] : 'บริการซ่อม',
+            date: `${dateObj.toLocaleDateString('th-TH')} เวลา ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`,
+            price: job.totalPrice ? `${job.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿` : '0.00 ฿'
+        }
+    }).filter(job => {
+        if (service.value && job.serviceTitle !== service.value) return false;
+        if (query.value && !job.id.toLowerCase().includes(query.value.toLowerCase())) return false;
+        return true;
+    });
+});
 
 const goToDetails = (id: string) => {
   router.push(`/technician/history/${id}`);
@@ -57,16 +60,33 @@ const goToDetails = (id: string) => {
 
 <template>
   <div class="flex flex-col gap-6 w-full max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-sm">
-    <h1 class="style-headline-2 text-gray-900 mb-2">ประวัติการซ่อม</h1>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <h1 class="style-headline-2 text-gray-900">ประวัติการซ่อม</h1>
+      
+      <!-- Search Box -->
+      <div class="flex items-center gap-3 rounded-[8px] border border-gray-200 bg-white px-4 py-2.5 w-full md:w-[320px]">
+        <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+          <path d="M16.5 16.5 21 21" stroke-linecap="round" />
+        </svg>
+        <input v-model="query" type="text" class="min-w-0 flex-1 bg-transparent outline-none style-body-2 text-gray-900 placeholder:text-gray-400" placeholder="ค้นหารายการคำสั่งซ่อม..." />
+      </div>
+    </div>
     
-    <FilterBar
-      v-model:query="query"
-      v-model:service="service"
-      v-model:sort="date"
-      :service-options="serviceOptions"
-      :sort-options="dateOptions"
-      @search="handleSearch"
-    />
+    <div class="flex flex-wrap items-center gap-6 mt-2 mb-2">
+      <!-- Service Filter Dropdown -->
+      <div class="flex items-center gap-3">
+        <span class="style-body-2 text-gray-700">บริการ</span>
+        <div class="relative">
+          <select v-model="service" class="appearance-none border border-gray-200 rounded-[8px] pl-3 pr-8 py-2 style-body-2 text-gray-700 bg-white outline-none focus:border-blue-500 cursor-pointer min-w-[160px]">
+            <option v-for="opt in serviceOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Data Table -->
     <Table>
@@ -79,7 +99,7 @@ const goToDetails = (id: string) => {
       </template>
 
       <template #body>
-        <tr v-for="order in mockHistoryOrders" :key="order.id" class="hover:bg-gray-50 cursor-pointer" @click="goToDetails(order.id)">
+        <tr v-for="order in displayOrders" :key="order.id" class="hover:bg-gray-50 cursor-pointer" @click="goToDetails(order.id)">
           <td>{{ order.serviceTitle }}</td>
           <td>{{ order.date }}</td>
           <td>{{ order.id }}</td>

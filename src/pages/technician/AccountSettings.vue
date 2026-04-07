@@ -1,37 +1,73 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import ActionButton from '../../components/ui/ActionButton.vue';
 import ToggleSwitch from '../../components/ui/ToggleSwitch.vue';
-import Checkbox from '../../components/ui/Checkbox.vue';
+import CheckBox from '../../components/ui/CheckBox.vue';
+import technicianApi from '../../services/api/technician';
+import { showCustomToast } from '../../utils/toast';
 
 // Form State
 const formData = ref({
-  firstName: 'สมมติ',
-  lastName: 'รักความสะอาด',
-  phone: '081 234 5678',
-  address: '332 อาคารพาณิชย์ ถนนรามคำแหง แขวงหัวหมาก เขตบางกะปิ กรุงเทพฯ',
-  isAvailable: true,
-  services: {
-    cleaning: true,
-    air_clean: true,
-    general_clean: true,
-    air_repair: true,
-    machine_repair: true,
-    car_clean: false,
-    car_repair: false,
-    bike_repair: false,
-    other: true
+  firstName: '',
+  lastName: '',
+  phone: '',
+  address: '',
+  subDistrictId: 1, // Defaulting to 1, since we don't have sub-district picker built
+  isAvailable: false,
+  serviceIds: [] as number[],
+});
+
+const availableServices = ref<{id: number, title: string}[]>([]);
+const isLoading = ref(true);
+
+const loadProfile = async () => {
+  isLoading.value = true;
+  try {
+    const profile = await technicianApi.getProfile();
+    availableServices.value = await technicianApi.getServices();
+
+    // Split name into first and last name if possible
+    const nameParts = (profile.name || '').split(' ');
+    formData.value.firstName = nameParts[0] || '';
+    formData.value.lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    formData.value.phone = profile.phone || '';
+    formData.value.address = profile.addressDetail || '';
+    formData.value.subDistrictId = profile.subDistrictId || 1;
+    formData.value.isAvailable = profile.isAvailable;
+
+    // Set service IDs
+    formData.value.serviceIds = profile.serviceIds || [];
+  } catch (error) {
+    showCustomToast({ variant: 'error', title: 'เกิดข้อผิดพลาด', description: 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้' });
+  } finally {
+    isLoading.value = false;
   }
+};
+
+onMounted(() => {
+  loadProfile();
 });
 
 const handleCancel = () => {
-  console.log('Cancelled form changes');
-  // Reset logic or navigate away
+  loadProfile(); // Reset to backend data
 };
 
-const handleConfirm = () => {
-  console.log('Confirmed form changes', formData.value);
-  // Submit logic
+const handleConfirm = async () => {
+  try {
+    const payload = {
+      name: `${formData.value.firstName} ${formData.value.lastName}`.trim(),
+      phone: formData.value.phone,
+      addressDetail: formData.value.address,
+      subDistrictId: formData.value.subDistrictId,
+      isAvailable: formData.value.isAvailable,
+      serviceIds: formData.value.serviceIds
+    };
+
+    await technicianApi.updateProfile(payload);
+    showCustomToast({ title: 'สำเร็จ', description: 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว' });
+  } catch (err) {
+    showCustomToast({ variant: 'error', title: 'เกิดข้อผิดพลาด', description: 'ไม่สามารถบันทึกข้อมูลได้' });
+  }
 };
 
 const isRefreshingLocation = ref(false);
@@ -150,15 +186,16 @@ const handleRefreshLocation = () => {
         <div class="grid grid-cols-[180px_1fr] md:grid-cols-[240px_1fr] items-start">
           <label class="text-gray-900 style-headline-3">บริการที่รับซ่อม</label>
           <div class="flex flex-col gap-4 mt-1">
-            <Checkbox v-model="formData.services.cleaning" label="ล้างแอร์" />
-            <Checkbox v-model="formData.services.air_clean" label="ติดตั้งแอร์" />
-            <Checkbox v-model="formData.services.general_clean" label="ทำความสะอาดทั่วไป" />
-            <Checkbox v-model="formData.services.air_repair" label="ซ่อมแอร์" />
-            <Checkbox v-model="formData.services.machine_repair" label="ซ่อมเครื่องซักผ้า" />
-            <Checkbox v-model="formData.services.car_clean" label="ติดตั้งจานดาวเทียม" />
-            <Checkbox v-model="formData.services.car_repair" label="ติดตั้งกล้องวงจรปิด" />
-            <Checkbox v-model="formData.services.bike_repair" label="ติดตั้งผ้าม่าน" />
-            <Checkbox v-model="formData.services.other" label="ติดตั้งเครื่องทำน้ำอุ่น" />
+            <CheckBox 
+              v-for="svc in availableServices"
+              :key="svc.id"
+              :model-value="formData.serviceIds.includes(svc.id)"
+              @update:model-value="(val) => {
+                if (val) formData.serviceIds.push(svc.id);
+                else formData.serviceIds = formData.serviceIds.filter(id => id !== svc.id);
+              }"
+              :label="svc.title" 
+            />
           </div>
         </div>
       </section>

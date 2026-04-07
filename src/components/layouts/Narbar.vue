@@ -190,6 +190,16 @@ onBeforeUnmount(() =>
               ข้อมูลผู้ใช้งาน
             </button>
             <button
+              v-if="user?.role === 'technician'"
+              type="button"
+              role="menuitem"
+              class="flex w-full items-center gap-3 px-4 py-3 text-left style-body-3 text-gray-700 transition-colors hover:bg-gray-100"
+              @click="goTechnicianDashboard"
+            >
+              <WrenchIcon :size="20" class="shrink-0 text-gray-600" />
+              แดชบอร์ดช่าง (Technician)
+            </button>
+            <button
               type="button"
               role="menuitem"
               class="flex w-full items-center gap-3 px-4 py-3 text-left style-body-3 text-gray-700 transition-colors hover:bg-gray-100"
