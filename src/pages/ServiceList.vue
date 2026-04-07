@@ -22,11 +22,17 @@ const isHideNavbar = computed(
   () => scrollY.value > 60 && scrollDirection.value === "down",
 );
 
-const categoryOptions = [
-  { value: "", label: "บริการทั้งหมด" },
-  { value: "บริการทั่วไป", label: "บริการทั่วไป" },
-  { value: "บริการติดตั้ง", label: "บริการติดตั้ง" },
-];
+const categoryOptions = computed(() => {
+  const labels = new Set<string>();
+  for (const s of serviceItems.value) {
+    if (s.category) labels.add(s.category);
+  }
+  const sorted = [...labels].sort((a, b) => a.localeCompare(b, "th"));
+  return [
+    { value: "", label: "บริการทั้งหมด" },
+    ...sorted.map((label) => ({ value: label, label })),
+  ];
+});
 
 const sortOptions = [
   { value: "recommended", label: "บริการแนะนำ" },

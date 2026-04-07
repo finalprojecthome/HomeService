@@ -60,7 +60,14 @@ const emit = defineEmits<{
       />
     </div>
 
-    <!-- Placeholder: lightweight icon + gradient background -->
+    <!-- ไม่มี URL: skeleton -->
+    <div
+      v-else-if="!imageSrc"
+      class="h-[150px] sm:h-[165px] md:h-[190px] w-full bg-gray-200 animate-pulse"
+      aria-hidden="true"
+    />
+
+    <!-- โหลดรูปไม่สำเร็จ: ไอคอน + พื้นหลัง -->
     <div
       v-else
       class="h-[150px] sm:h-[165px] md:h-[190px] w-full overflow-hidden flex items-center justify-center bg-linear-to-br from-[#DCE6FF] to-[#EAF2FF]"
