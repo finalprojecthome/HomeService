@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+
 import SelectBox from "./ui/SelectBox.vue";
 import { QrIcon, Card } from "./icons";
 
@@ -15,7 +15,7 @@ const props = withDefaults(
     label?: string;
   }>(),
   {
-    modelValue: "",
+    modelValue: undefined,
     options: () => [
       { value: "credit-card", label: "บัตรเครดิต/เดบิต" },
       { value: "qr", label: "QR พร้อมเพย์" },
@@ -32,7 +32,6 @@ function updatePayment(value: string) {
   emit("update:modelValue", value);
 }
 
-const hasPaymentSelection = computed(() => props.modelValue !== "");
 </script>
 
 <template>
@@ -42,8 +41,7 @@ const hasPaymentSelection = computed(() => props.modelValue !== "");
     </h3>
 
     <div
-      class="flex flex-wrap gap-4 transition-opacity"
-      :class="hasPaymentSelection ? 'opacity-100' : 'opacity-0'"
+      class="flex flex-wrap gap-4"
     >
       <SelectBox
         v-for="option in options"
