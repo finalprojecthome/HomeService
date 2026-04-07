@@ -53,7 +53,12 @@ const isRefreshingLocation = ref(false);
 const loadTechnicianLocation = async () => {
   try {
     const profile = await technicianApi.getProfile();
-    currentLocationStr.value = profile.addressDetail || '332 อาคารพาณิชย์ ถนนรามคำแหง แขวงหัวหมาก เขตบางกะปิ กรุงเทพฯ';
+    if (profile.addressDetail && profile.addressDetail.trim().length > 0) {
+      currentLocationStr.value = profile.addressDetail;
+    } else {
+      currentLocationStr.value = 'กำลังดึงพิกัดปัจจุบัน...';
+      handleRefreshLocation();
+    }
   } catch (e) {
     currentLocationStr.value = 'ไม่สามารถดึงตำแหน่งปัจจุบันได้';
   }
