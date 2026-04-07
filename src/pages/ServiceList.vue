@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import FilterBar from "../components/FilterBar.vue";
 import ServiceCard from "../components/ServiceCard.vue";
@@ -53,6 +53,8 @@ type ServiceItem = {
 const serviceItems = ref<ServiceItem[]>([]);
 const isLoadingServices = ref(false);
 const serviceLoadError = ref("");
+const itemsPerPage = 9;
+const currentPage = ref(1);
 
 function mapCategoryVariant(
   category: string,
@@ -93,6 +95,27 @@ const {
   resetSearch,
 } = useServiceFilters<ServiceItem>(serviceItems);
 
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(displayedServiceItems.value.length / itemsPerPage)),
+);
+
+const paginatedServiceItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return displayedServiceItems.value.slice(start, start + itemsPerPage);
+});
+
+const pageNumbers = computed(() =>
+  Array.from({ length: totalPages.value }, (_, i) => i + 1),
+);
+
+watch(displayedServiceItems, () => {
+  currentPage.value = 1;
+});
+
+function goToPage(page: number) {
+  currentPage.value = Math.min(Math.max(page, 1), totalPages.value);
+}
+
 onMounted(() => {
   void loadServices();
 });
@@ -103,6 +126,7 @@ function clearFilters() {
   selectedPrice.value = "";
   selectedPriceRange.value = [0, 2000];
   selectedSort.value = "";
+  currentPage.value = 1;
   resetSearch();
 }
 </script>
@@ -152,7 +176,7 @@ function clearFilters() {
         </div>
       </section>
 
-      <section class="max-w-6xl mx-auto px-4 md:px-8 py-8">
+      <section class="max-w-6xl mx-auto px-4 md:px-8 py-8 flex flex-col">
         <div v-if="isLoadingServices" class="rounded-xl p-10 text-center">
           <p class="style-headline-5 text-gray-900">กำลังโหลดบริการ...</p>
         </div>
@@ -168,7 +192,7 @@ function clearFilters() {
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ">
           <ServiceCard
-            v-for="(item, index) in displayedServiceItems"
+            v-for="(item, index) in paginatedServiceItems"
             :key="item.id || index"
             :title="item.title"
             :category="item.category"
@@ -178,6 +202,41 @@ function clearFilters() {
             ctaText="เลือกบริการ"
             class="cursor-pointer hover:scale-105 transition-all duration-300"
           />
+        </div>
+        <div
+          v-if="!isLoadingServices && !serviceLoadError && displayedServiceItems.length > 0"
+          class="mt-8 flex flex-wrap items-center justify-center gap-2"
+        >
+          <button
+            type="button"
+            class="px-3 py-2 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+            :disabled="currentPage === 1"
+            @click="goToPage(currentPage - 1)"
+          >
+            ก่อนหน้า
+          </button>
+          <button
+            v-for="page in pageNumbers"
+            :key="page"
+            type="button"
+            class="min-w-10 px-3 py-2 rounded-md border text-sm"
+            :class="
+              page === currentPage
+                ? 'bg-[#112A5A] text-white border-[#112A5A]'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+            "
+            @click="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            type="button"
+            class="px-3 py-2 rounded-md border border-gray-300 text-sm disabled:opacity-50"
+            :disabled="currentPage === totalPages"
+            @click="goToPage(currentPage + 1)"
+          >
+            ถัดไป
+          </button>
         </div>
       </section>
       <section
