@@ -1,18 +1,11 @@
-<<<<<<< HEAD
-import { privateApi } from '../client';
-=======
 import { privateApi } from "../client";
->>>>>>> a6b3a10 (feat: implement technician portal with API service, routing, and navigation updates)
 
 export interface TechnicianProfile {
   name: string;
   phone: string;
   email: string;
   addressDetail: string;
-<<<<<<< HEAD
   subDistrictId: number | null;
-=======
-  subDistrictId: number;
   isAvailable: boolean;
   serviceIds: number[];
 }
@@ -22,35 +15,16 @@ export interface UpdateProfilePayload {
   phone: string;
   addressDetail: string;
   subDistrictId: number;
->>>>>>> a6b3a10 (feat: implement technician portal with API service, routing, and navigation updates)
   isAvailable: boolean;
   serviceIds: number[];
 }
 
 export interface TechnicianJob {
   orderId: string;
-<<<<<<< HEAD
-  status: string;
-  customerName: string;
-  addressDetail: string;
-  scheduledAt: string;
-  totalPrice: number | null;
-  serviceItems: any[];
-}
-
-export const technicianApi = {
-  getProfile: () => privateApi.get<TechnicianProfile>('/technician/profile'),
-  updateProfile: (data: Partial<TechnicianProfile>) => privateApi.put('/technician/profile', data),
-  getAvailableJobs: () => privateApi.get<TechnicianJob[]>('/technician/jobs/available'),
-  getMyJobs: () => privateApi.get<TechnicianJob[]>('/technician/jobs/my'),
-  acceptJob: (orderId: string) => privateApi.post(`/technician/jobs/${orderId}/accept`),
-  updateJobStatus: (orderId: string, status: string) => privateApi.patch(`/technician/jobs/${orderId}/status`, { status }),
-};
-=======
   customerName: string;
   addressDetail: string;
   serviceItems: string[];
-  totalPrice: number;
+  totalPrice: number | null;
   scheduledAt: string; // ISO String
   status: string;
 }
@@ -86,4 +60,3 @@ const technicianApi = {
 };
 
 export default technicianApi;
->>>>>>> a6b3a10 (feat: implement technician portal with API service, routing, and navigation updates)
