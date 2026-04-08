@@ -304,7 +304,8 @@ const handleSubmit: SubmissionHandler = async (formValues) => {
     if (props.mode === "edit" && currentEditAddressId == null) {
       showCustomToast({
         variant: "error",
-        title: "ไม่พบข้อมูลที่อยู่",
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่พบข้อมูลที่อยู่",
       });
       await router.replace("/address");
       return;
@@ -319,13 +320,13 @@ const handleSubmit: SubmissionHandler = async (formValues) => {
       }
       response = await userApi.updateAddress(currentEditAddressId, payload);
     }
-
-    await addressStore.fetchAddresses(true);
     showCustomToast({
       variant: "success",
-      title: response.message,
+      title: "สำเร็จ",
+      description: response.message,
     });
     await router.replace("/address");
+    await addressStore.fetchAddresses(true);
   } catch {
     showCustomToast({
       variant: "error",
@@ -342,7 +343,8 @@ const handleDeleteAddress = async () => {
   if (props.mode !== "edit" || currentEditAddressId == null) {
     showCustomToast({
       variant: "error",
-      title: "ไม่พบข้อมูลที่อยู่",
+      title: "เกิดข้อผิดพลาด",
+      description: "ไม่พบข้อมูลที่อยู่",
     });
     await router.replace("/address");
     return;
@@ -356,12 +358,13 @@ const handleDeleteAddress = async () => {
   isSubmitting.value = true;
   try {
     const response = await userApi.deleteAddress(currentEditAddressId);
-    await addressStore.fetchAddresses(true);
     showCustomToast({
       variant: "success",
-      title: response.message,
+      title: "สำเร็จ",
+      description: response.message,
     });
     await router.replace("/address");
+    await addressStore.fetchAddresses(true);
   } catch {
     showCustomToast({
       variant: "error",
