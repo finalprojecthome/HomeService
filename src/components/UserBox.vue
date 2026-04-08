@@ -25,7 +25,7 @@ const { scrollDirection } = useScrollState();
         'transition-all duration-400 ease-in-out',
         scrollDirection === 'down'
           ? 'top-0 xl:top-4 xl:py-0'
-          : 'top-13 md:top-20 xl:pt-0',
+          : 'top-13 md:top-20 xl:top-26 xl:pt-0',
       )
     "
   >
