@@ -2,11 +2,14 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
-import { UserIcon, List, History, Pencil, TagIcon } from "../components/icons";
+import { UserIcon, List, History, Pencil, MapIcon } from "../components/icons";
 import UserBox from "../components/UserBox.vue";
 import ServiceOrderCard from "../components/ServiceOrderCard.vue";
 import EditProfileForm from "../components/profile/EditProfileForm.vue";
 import ResetPasswordForm from "../components/profile/ResetPasswordForm.vue";
+import AddressList from "../components/profile/AddressList.vue";
+import AddressForm from "../components/profile/AddressForm.vue";
+
 const route = useRoute();
 
 const title = computed(() => String(route.meta.title ?? ""));
@@ -17,8 +20,8 @@ const sidebarItems = [
     path: "/profile",
   },
   {
-    icon: TagIcon,
-    label: "ข้อมูลที่อยู่",
+    icon: MapIcon,
+    label: "ที่อยู่ของฉัน",
     path: "/address",
   },
   {
@@ -56,6 +59,11 @@ const sidebarclass =
         <div class="flex flex-col gap-4 flex-1 mx-4 xl:mx-0">
           <template v-if="route.path === '/profile'">
             <EditProfileForm />
+          </template>
+          <template v-else-if="route.path.startsWith('/address')">
+            <AddressList v-if="route.path === '/address'" />
+            <AddressForm mode="add" v-else-if="route.path === '/address/add'" />
+            <AddressForm mode="edit" v-else />
           </template>
           <template v-else-if="route.path === '/repair-orders'">
             <ServiceOrderCard

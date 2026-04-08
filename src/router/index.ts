@@ -63,6 +63,18 @@ const router = createRouter({
         requiresAuth: true,
         roles: ["user"],
       },
+      children: [
+        {
+          path: "add",
+          name: "addAddress",
+          component: AccountStubPage,
+        },
+        {
+          path: "edit/:id",
+          name: "editAddress",
+          component: AccountStubPage,
+        },
+      ],
     },
     {
       path: "/repair-orders",

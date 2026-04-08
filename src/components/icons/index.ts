@@ -35,4 +35,6 @@ export {
   categoryIcon,
   serviceIcon,
   promotionCodeIcon,
+  MapIcon,
+  PlusIcon,
 } from "./icons";
