@@ -18,3 +18,27 @@ export interface UpdateProfilePayload {
   phone: string;
   image?: File | Blob | null;
 }
+
+export interface UserAddress {
+  id: number;
+  addressName: string;
+  addressDetail: string;
+  province: { id: number; name: string };
+  district: { id: number; name: string };
+  subDistrict: { id: number; name: string };
+  postCode: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface AddressPayload {
+  addressName: string;
+  addressDetail: string;
+  subDistrictId: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface AddressResponse {
+  message: string;
+}
