@@ -5,7 +5,7 @@ import { InputForm } from "../form";
 import ImageUpload from "../ui/ImageUpload.vue";
 import ActionButton from "../ui/ActionButton.vue";
 import { useAuthStore } from "../../stores";
-import profileApi from "../../services/api/profile";
+import userApi from "../../services/api/user";
 import { getApiErrorMessage } from "../../utils/getApiErrorMessage";
 import { showCustomToast } from "../../utils/toast";
 
@@ -23,7 +23,7 @@ const handleSubmit: SubmissionHandler = async (values) => {
   const { fullname, phone } = values as ProfileFormValues;
   isSubmitting.value = true;
   try {
-    const { message } = await profileApi.updateProfile({
+    const { message } = await userApi.updateProfile({
       fullname,
       phone,
       image: profileImageFile.value ?? undefined,
@@ -90,6 +90,7 @@ const handleSubmit: SubmissionHandler = async (values) => {
             autocomplete="email"
             inputmode="email"
             :disabled="true"
+            required
           />
         </div>
         <ActionButton type="submit" class="w-fit">แก้ไขข้อมูล</ActionButton>

@@ -9,6 +9,17 @@ import type {
 import type { User } from "../../types/user";
 import { privateApi, publicApi } from "../client";
 
+type UserResponseDto = Omit<User, "updatedAt"> & {
+  updatedAt: string;
+};
+
+function mapUserResponse(data: UserResponseDto): User {
+  return {
+    ...data,
+    updatedAt: new Date(data.updatedAt),
+  };
+}
+
 const authApi = {
   register: async (data: RegisterFormValues): Promise<RegisterResponse> => {
     return publicApi.post("/auth/register", data).then((res) => res.data);
@@ -19,7 +30,9 @@ const authApi = {
   },
 
   getUser: async (): Promise<User> => {
-    return privateApi.get("/auth/get-user").then((res) => res.data);
+    return privateApi
+      .get<UserResponseDto>("/auth/get-user")
+      .then((res) => mapUserResponse(res.data));
   },
 
   resetPassword: async (

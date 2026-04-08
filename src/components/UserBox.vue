@@ -25,7 +25,7 @@ const { scrollDirection } = useScrollState();
         'transition-all duration-400 ease-in-out',
         scrollDirection === 'down'
           ? 'top-0 xl:top-4 xl:py-0'
-          : 'top-13 md:top-26 xl:pt-0',
+          : 'top-13 md:top-20 xl:top-26 xl:pt-0',
       )
     "
   >
@@ -57,7 +57,7 @@ const { scrollDirection } = useScrollState();
               :class="
                 cn(
                   'size-6 shrink-0 text-gray-500',
-                  router.currentRoute.value.path === item.path &&
+                  router.currentRoute.value.path.startsWith(item.path ?? '') &&
                     'text-blue-700',
                 )
               "
@@ -66,7 +66,7 @@ const { scrollDirection } = useScrollState();
               :class="
                 cn(
                   'text-center xl:text-left text-balance line-clamp-2 leading-snug wrap-break-word min-w-0 xl:min-w-0',
-                  router.currentRoute.value.path === item.path &&
+                  router.currentRoute.value.path.startsWith(item.path ?? '') &&
                     'text-blue-700',
                 )
               "
@@ -87,7 +87,7 @@ const { scrollDirection } = useScrollState();
               :class="
                 cn(
                   'text-center xl:text-left text-balance line-clamp-2 leading-snug wrap-break-word min-w-0',
-                  router.currentRoute.value.path === item.path &&
+                  router.currentRoute.value.path.startsWith(item.path ?? '') &&
                     'text-blue-700',
                 )
               "

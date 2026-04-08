@@ -203,14 +203,24 @@ onBeforeUnmount(() =>
           </div>
         </Transition>
       </div>
-      <NavigationButton
-        v-else
-        variant="secondary"
-        to="/auth/login"
-        class="h-9.25 px-4 text-sm md:h-10 md:px-6 md:text-[1rem]"
-      >
-        เข้าสู่ระบบ
-      </NavigationButton>
+      <template v-else>
+        <NavigationButton
+          v-if="router.currentRoute.value.path !== '/auth/login'"
+          variant="secondary"
+          to="/auth/login"
+          class="h-9.25 px-4 text-sm md:h-10 md:px-6 md:text-[1rem]"
+        >
+          เข้าสู่ระบบ
+        </NavigationButton>
+        <NavigationButton
+          v-else="router.currentRoute.value.path !== '/auth/login'"
+          variant="secondary"
+          to="/auth/register"
+          class="h-9.25 px-4 text-sm md:h-10 md:px-6 md:text-[1rem]"
+        >
+          ลงทะเบียน
+        </NavigationButton>
+      </template>
     </div>
   </nav>
 </template>
