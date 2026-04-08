@@ -7,6 +7,7 @@ export interface User {
   email: string;
   imgUrl: string | null;
   role: Role;
+  updatedAt: Date;
 }
 
 export interface UpdateProfileResponse {
