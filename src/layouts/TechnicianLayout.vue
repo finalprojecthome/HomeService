@@ -10,8 +10,10 @@ import {
   Logout
 } from '../components/icons';
 import technicianApi from '../services/api/technician';
+import useAuthStore from '../stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const availableJobsCount = ref(0);
 
@@ -37,9 +39,16 @@ const sidebarLinks = computed(() => [
   { id: 4, title: 'ตั้งค่าบัญชีผู้ใช้', icon: UserIcon, path: '/technician/settings' },
 ]);
 
-const bottomLink = { id: 5, title: 'ออกจากระบบ', icon: Logout, path: '/' };
+const bottomLink = { id: 5, title: 'ออกจากระบบ', icon: Logout, path: '/auth/login' };
 
 const handleMenuClick = (item: any) => {
+  if (item.id === 5) {
+    // Logout case
+    authStore.logout();
+    router.push('/auth/login');
+    return;
+  }
+  
   if (item.path) {
     router.push(item.path);
   }
@@ -54,7 +63,7 @@ const handleMenuClick = (item: any) => {
       :bottom-link="bottomLink"
       @click="handleMenuClick"
       @logout-click="handleMenuClick"
-      class="hidden md:flex flex-shrink-0"
+      class="hidden md:flex shrink-0"
     />
     
     <!-- Mobile header replacement (simplified for dashboard) -->
