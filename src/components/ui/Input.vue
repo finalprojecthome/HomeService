@@ -22,7 +22,10 @@ interface Props {
   class?: string;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  inputmode: "text",
+  autocomplete: "off",
+});
 </script>
 
 <template>
@@ -38,16 +41,15 @@ const props = defineProps<Props>();
       :disabled="props.disabled"
       :class="
         cn(
-          'w-full px-4 py-2.5 style-body-2  text-gray-950 bg-white rounded-lg ring ring-inset ring-gray-300 transition-all outline-none',
-          'focus-visible:ring-blue-600',
-          'placeholder:text-gray-700',
-          'disabled:text-gray-400 disabled:bg-gray-100 disabled:ring-gray-300',
+          'w-full px-4 py-2.5 style-body-2 text-gray-950 bg-white rounded-lg ring ring-inset ring-gray-300 transition-all outline-none',
+          'focus-visible:ring-blue-600 placeholder:text-gray-700',
+          'disabled:text-gray-400 disabled:bg-gray-100 disabled:ring-gray-300 disabled:placeholder:text-gray-400',
           isError && 'ring-red focus-visible:ring-red',
         )
       "
     />
     <component
-      v-if="isError"
+      v-if="isError && !disabled"
       :is="ExclamationCircleIcon"
       class="absolute top-3.5 right-3.5 size-4 text-red"
     />

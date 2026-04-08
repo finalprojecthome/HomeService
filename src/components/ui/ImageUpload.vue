@@ -173,8 +173,9 @@ function removeFile() {
           <span
             class="text-blue-600 cursor-pointer"
             @click.stop="triggerFileInput"
-            >อัพโหลดรูปภาพ</span
           >
+            อัพโหลดรูปภาพ
+          </span>
           หรือ ลากและวางที่นี่
         </p>
         <p class="style-body-4 text-gray-700">
