@@ -46,6 +46,21 @@ import Breadcrumb, {
 } from "../components/ui/Breadcrumb.vue";
 import { showCustomToast } from "../utils/toast";
 import Footer from "../components/layouts/Footer.vue";
+import TextArea from "../components/ui/TextArea.vue";
+import AddressTile from "../components/profile/AddressTile.vue";
+import type { UserAddress } from "../types/user";
+
+const data: UserAddress = {
+  addressDetail: "123, ถ. ประชาอุทิศ",
+  addressName: "บ้าน",
+  district: { id: 1, name: "ทุ่งครุ" },
+  id: 1,
+  latitude: 13.638449,
+  longitude: 100.500462,
+  postCode: 10140,
+  province: { id: 1, name: "กรุงเทพมหานคร" },
+  subDistrict: { id: 1, name: "ทุ่งครุ" },
+};
 
 const bookingTime = ref<string | null>(null);
 const bookingDate = ref<string | null>(null);
@@ -353,11 +368,11 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
       </div>
 
       <!-- Input -->
-      <h1 class="style-headline-1">Input</h1>
+      <h1 class="style-headline-1">Input & Text Area</h1>
       <div class="flex flex-col items-center gap-4">
         <Input name="input" placeholder="Place Holder" />
         <Input
-          name="input-placeholder"
+          name="input-value"
           value="Default Value"
           placeholder="Place Holder"
         />
@@ -381,7 +396,32 @@ const handleViewMap = () => alert("กำลังเปิดแผนที่
           class="w-125"
           :isError="true"
         />
+        <TextArea name="textarea" placeholder="Place Holder" />
+        <TextArea
+          name="textarea-value"
+          value="Default Value"
+          placeholder="Place Holder"
+        />
+        <TextArea
+          name="textarea-disabled"
+          placeholder="Place Holder"
+          disabled
+        />
+        <TextArea
+          name="textarea-error"
+          placeholder="Place Holder"
+          value="Error Text Area"
+          :isError="true"
+        />
+        <TextArea
+          name="textarea-adjust-size"
+          value="Adjust Size"
+          placeholder="Place Holder"
+          class="w-100 h-50"
+        />
       </div>
+
+      <AddressTile :address="data" />
 
       <!-- Toast -->
       <h1 class="style-headline-1">Toast</h1>
