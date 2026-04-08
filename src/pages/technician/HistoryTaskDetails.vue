@@ -42,9 +42,9 @@ const goBack = () => router.back();
       <div class="grid grid-cols-[140px_1fr] md:grid-cols-[180px_1fr] gap-y-6 items-start border-b border-gray-100 pb-8 mb-8">
         <span class="text-gray-500 style-headline-5">หมวดหมู่</span>
         <div>
-          <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+          <Badge variant="blue">
             {{ orderDetail.category }}
-          </span>
+          </Badge>
         </div>
 
         <span class="text-gray-500 style-headline-5">รายการ</span>

@@ -42,10 +42,9 @@ const goBack = () => router.back();
         
         <span class="text-gray-500 style-headline-5">หมวดหมู่</span>
         <div>
-          <!-- Fallback badge style if Badge.vue doesn't support the right props -->
-          <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+          <Badge variant="blue">
             {{ orderDetail.category }}
-          </span>
+          </Badge>
         </div>
 
         <span class="text-gray-500 style-headline-5">รายการ</span>
