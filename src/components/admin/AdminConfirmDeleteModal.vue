@@ -8,12 +8,21 @@ import TextInput from "../ui/TextInput.vue";
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
-    categoryName: string;
+    itemName: string;
+    title: string;
+    simpleMessageTemplate: string;
+    forceMessageTemplate: string;
+    confirmText: string;
+    forceConfirmText: string;
+    typedPlaceholderTemplate?: string;
+    typedMismatchMessage?: string;
     requiresTypedConfirmation?: boolean;
     isSubmitting?: boolean;
     errorMessage?: string;
   }>(),
   {
+    typedPlaceholderTemplate: "",
+    typedMismatchMessage: "ชื่อรายการไม่ถูกต้อง",
     requiresTypedConfirmation: false,
     isSubmitting: false,
     errorMessage: "",
@@ -27,37 +36,42 @@ const emit = defineEmits<{
 }>();
 
 const closeIconPath = "M6 6L18 18M18 6L6 18";
-const typedCategoryName = ref("");
+const typedItemName = ref("");
 const localErrorMessage = ref("");
+
+const resolvedConfirmText = computed(() =>
+  props.requiresTypedConfirmation ? props.forceConfirmText : props.confirmText,
+);
+const resolvedMessage = computed(() =>
+  resolveTemplate(
+    props.requiresTypedConfirmation
+      ? props.forceMessageTemplate
+      : props.simpleMessageTemplate,
+  ),
+);
+const resolvedPlaceholder = computed(() =>
+  resolveTemplate(props.typedPlaceholderTemplate),
+);
+const inputError = computed(() => localErrorMessage.value || props.errorMessage);
 
 function wrapCurlyQuotes(value: string) {
   return `‘${value}’`;
 }
 
-const title = computed(() => "ยืนยันการลบหมวดหมู่");
-const confirmText = computed(() =>
-  props.requiresTypedConfirmation
-    ? "ลบหมวดและบริการทั้งหมด"
-    : "ลบรายการ",
-);
-const helperMessage = computed(() =>
-  props.requiresTypedConfirmation
-    ? `บริการในหมวด ${wrapCurlyQuotes(props.categoryName)} กำลังถูกใช้งานอยู่ การลบครั้งนี้จะลบบริการที่อยู่ในหมวดนี้ทั้งหมด
-เพื่อยืนยัน กรุณาพิมพ์ชื่อหมวด ${wrapCurlyQuotes(props.categoryName)} ลงด้านล่าง`
-    : `คุณต้องการลบหมวดหมู่ ${wrapCurlyQuotes(props.categoryName)} ใช่หรือไม่`,
-);
-const inputError = computed(() => localErrorMessage.value || props.errorMessage);
+function resolveTemplate(template: string) {
+  return template.replaceAll("{itemName}", wrapCurlyQuotes(props.itemName));
+}
 
 watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen) {
-      typedCategoryName.value = "";
+      typedItemName.value = "";
       localErrorMessage.value = "";
       return;
     }
 
-    typedCategoryName.value = "";
+    typedItemName.value = "";
     localErrorMessage.value = "";
   },
 );
@@ -65,7 +79,7 @@ watch(
 watch(
   () => props.requiresTypedConfirmation,
   () => {
-    typedCategoryName.value = "";
+    typedItemName.value = "";
     localErrorMessage.value = "";
   },
 );
@@ -86,14 +100,14 @@ function closeModal() {
 
 function confirmAction() {
   if (props.requiresTypedConfirmation) {
-    if (typedCategoryName.value.trim() !== props.categoryName.trim()) {
-      localErrorMessage.value = "ชื่อหมวดไม่ถูกต้อง";
+    if (typedItemName.value.trim() !== props.itemName.trim()) {
+      localErrorMessage.value = props.typedMismatchMessage;
       return;
     }
   }
 
   localErrorMessage.value = "";
-  emit("confirm", typedCategoryName.value.trim());
+  emit("confirm", typedItemName.value.trim());
 }
 </script>
 
@@ -111,6 +125,7 @@ function confirmAction() {
           type="button"
           class="absolute right-4 top-4 cursor-pointer text-gray-600 transition-colors hover:text-gray-700"
           aria-label="Close dialog"
+          :disabled="isSubmitting"
           @click="closeModal"
         >
           <Icon :path="closeIconPath" class="h-5 w-5" />
@@ -124,14 +139,14 @@ function confirmAction() {
           </h2>
 
           <p class="mt-4 whitespace-pre-line style-body-2 text-gray-700">
-            {{ helperMessage }}
+            {{ resolvedMessage }}
           </p>
 
           <div v-if="requiresTypedConfirmation" class="mt-6 w-full text-left">
             <TextInput
-              v-model="typedCategoryName"
-              name="typed-category-name"
-              :placeholder="`พิมพ์ชื่อหมวด ${categoryName}`"
+              v-model="typedItemName"
+              name="typed-item-name"
+              :placeholder="resolvedPlaceholder"
               :error="inputError || null"
               :disabled="isSubmitting"
             />
@@ -152,7 +167,7 @@ function confirmAction() {
               :disabled="isSubmitting"
               @click="confirmAction"
             >
-              {{ confirmText }}
+              {{ resolvedConfirmText }}
             </ActionButton>
             <ActionButton
               variant="secondary"
