@@ -55,7 +55,7 @@ const handleSubmit: SubmissionHandler = async (values) => {
           <div class="flex gap-4">
             <SelectBoxForm
               name="role"
-              value="user"
+              value="customer"
               label="ผู้ใช้งาน"
               rules="selectRoleRequired"
               class="flex-1 min-h-28 max-h-28 w-auto"

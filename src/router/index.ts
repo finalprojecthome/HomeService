@@ -51,7 +51,7 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลผู้ใช้งาน",
         requiresAuth: true,
-        roles: ["user"],
+        roles: ["customer"],
       },
     },
     {
@@ -61,7 +61,7 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลที่อยู่",
         requiresAuth: true,
-        roles: ["user"],
+        roles: ["customer"],
       },
       children: [
         {
@@ -83,7 +83,7 @@ const router = createRouter({
       meta: {
         title: "รายการคำสั่งซ่อม",
         requiresAuth: true,
-        roles: ["user"],
+        roles: ["customer"],
       },
     },
     {
@@ -93,7 +93,7 @@ const router = createRouter({
       meta: {
         title: "ประวัติการซ่อม",
         requiresAuth: true,
-        roles: ["user"],
+        roles: ["customer"],
       },
     },
     {
@@ -103,7 +103,7 @@ const router = createRouter({
       meta: {
         title: "เปลี่ยนรหัสผ่าน",
         requiresAuth: true,
-        roles: ["user"],
+        roles: ["customer"],
       },
     },
     {
