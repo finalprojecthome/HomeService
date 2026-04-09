@@ -13,6 +13,8 @@ type UserResponseDto = Omit<User, "updatedAt"> & {
   updatedAt: string;
 };
 
+const AUTH_BASE_URL = "/api/auth";
+
 function mapUserResponse(data: UserResponseDto): User {
   return {
     ...data,
@@ -22,16 +24,20 @@ function mapUserResponse(data: UserResponseDto): User {
 
 const authApi = {
   register: async (data: RegisterFormValues): Promise<RegisterResponse> => {
-    return publicApi.post("/auth/register", data).then((res) => res.data);
+    return publicApi
+      .post(`${AUTH_BASE_URL}/register`, data)
+      .then((res) => res.data);
   },
 
   login: async (data: LoginFormValues): Promise<LoginResponse> => {
-    return publicApi.post("/auth/login", data).then((res) => res.data);
+    return publicApi
+      .post(`${AUTH_BASE_URL}/login`, data)
+      .then((res) => res.data);
   },
 
   getUser: async (): Promise<User> => {
     return privateApi
-      .get<UserResponseDto>("/auth/get-user")
+      .get<UserResponseDto>(`${AUTH_BASE_URL}/get-user`)
       .then((res) => mapUserResponse(res.data));
   },
 
@@ -39,7 +45,7 @@ const authApi = {
     data: ResetPasswordPayload,
   ): Promise<ResetPasswordResponse> => {
     return privateApi
-      .put<ResetPasswordResponse>("/auth/reset-password", data)
+      .put<ResetPasswordResponse>(`${AUTH_BASE_URL}/reset-password`, data)
       .then((res) => res.data);
   },
 };

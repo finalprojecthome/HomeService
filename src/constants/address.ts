@@ -1,1 +1,1 @@
-export const MAX_ADDRESS_COUNT = 10;
+export const MAX_ADDRESS_COUNT = 4;
