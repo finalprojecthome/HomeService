@@ -12,6 +12,7 @@ import AccountStubPage from "../pages/AccountStubPage.vue";
 import AdminRegister from "../pages/Admin/Register.vue";
 import AdminLogin from "../pages/Admin/Login.vue";
 import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
+import AdminServices from "../pages/Admin/AdminServices/AdminServices.vue";
 
 const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
@@ -19,6 +20,10 @@ const AdminCategoryList = () => import("../pages/Admin/AdminCategory/AdminCatego
 const AdminAddCategory = () => import("../pages/Admin/AdminCategory/AdminAddCategory.vue");
 const AdminDetailCategory = () => import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
 const AdminEditCategory = () => import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
+const AdminServicesList = () => import("../pages/Admin/AdminServices/AdminServicesList.vue");
+const AdminAddServices = () => import("../pages/Admin/AdminServices/AdminAddServices.vue");
+const AdminDetailServices = () => import("../pages/Admin/AdminServices/AdminDetailServices.vue");
+const AdminEditServices = () => import("../pages/Admin/AdminServices/AdminEditServices.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -111,6 +116,34 @@ const router = createRouter({
           path: ":id/edit",
           name: "admin-edit-category",
           component: AdminEditCategory,
+        },
+      ],
+    },
+    {
+      path: "/admin/service",
+      name: "admin-service",
+      component: AdminServices,
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: "",
+          name: "admin-services-list",
+          component: AdminServicesList,
+        },
+        {
+          path: "add",
+          name: "admin-add-services",
+          component: AdminAddServices,
+        },
+        {
+          path: ":id",
+          name: "admin-detail-services",
+          component: AdminDetailServices,
+        },
+        {
+          path: ":id/edit",
+          name: "admin-edit-services",
+          component: AdminEditServices,
         },
       ],
     },

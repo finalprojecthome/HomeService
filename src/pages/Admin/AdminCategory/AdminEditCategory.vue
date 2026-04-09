@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AdminSidebar from "../../../components/admin/AdminSidebar.vue";
 import Modal from "../../../components/AlertModal.vue";
-import CategoryDeleteModal from "../../../components/admin/CategoryDeleteModal.vue";
+import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
 import { Bin } from "../../../components/icons";
 import ActionButton from "../../../components/ui/ActionButton.vue";
 import Icon from "../../../components/ui/Icon.vue";
@@ -321,9 +321,17 @@ async function deleteCategory() {
       </main>
     </div>
 
-    <CategoryDeleteModal
+    <AdminConfirmDeleteModal
       v-model="isDeleteModalOpen"
-      :category-name="initialCategoryName || trimmedCategoryName"
+      :item-name="initialCategoryName || trimmedCategoryName"
+      title="ยืนยันการลบหมวดหมู่"
+      simple-message-template="คุณต้องการลบหมวดหมู่ {itemName} ใช่หรือไม่"
+      force-message-template="บริการในหมวด {itemName} กำลังถูกใช้งานอยู่ การลบครั้งนี้จะลบบริการที่อยู่ในหมวดนี้ทั้งหมด
+เพื่อยืนยัน กรุณาพิมพ์ชื่อหมวด {itemName} ลงด้านล่าง"
+      confirm-text="ลบรายการ"
+      force-confirm-text="ลบหมวดและบริการทั้งหมด"
+      typed-placeholder-template="พิมพ์ชื่อหมวด {itemName}"
+      typed-mismatch-message="ชื่อหมวดไม่ถูกต้อง"
       :requires-typed-confirmation="requiresForceDelete"
       :is-submitting="isDeleting"
       :error-message="deleteModalErrorMessage"
