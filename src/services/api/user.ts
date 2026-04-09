@@ -7,6 +7,8 @@ import type {
 } from "../../types/user";
 import { privateApi } from "../client";
 
+const USER_BASE_URL = "/api/user";
+
 function appendImage(formData: FormData, image: File | Blob): void {
   if (image instanceof File) {
     formData.append("image", image);
@@ -18,13 +20,13 @@ function appendImage(formData: FormData, image: File | Blob): void {
 const userApi = {
   getAddresses: async (): Promise<UserAddress[]> => {
     return privateApi
-      .get<UserAddress[]>("/user/addresses")
+      .get<UserAddress[]>(`${USER_BASE_URL}/addresses`)
       .then((res) => res.data);
   },
 
   createAddress: async (data: AddressPayload): Promise<AddressResponse> => {
     return privateApi
-      .post<AddressResponse>("/user/addresses", data)
+      .post<AddressResponse>(`${USER_BASE_URL}/addresses`, data)
       .then((res) => res.data);
   },
 
@@ -39,7 +41,7 @@ const userApi = {
     }
 
     return privateApi
-      .put<UpdateProfileResponse>("/user/profile", formData)
+      .put<UpdateProfileResponse>(`${USER_BASE_URL}/profile`, formData)
       .then((res) => res.data);
   },
 
@@ -48,13 +50,13 @@ const userApi = {
     data: AddressPayload,
   ): Promise<AddressResponse> => {
     return privateApi
-      .put<AddressResponse>(`/user/addresses/${addressId}`, data)
+      .put<AddressResponse>(`${USER_BASE_URL}/addresses/${addressId}`, data)
       .then((res) => res.data);
   },
 
   deleteAddress: async (addressId: number): Promise<AddressResponse> => {
     return privateApi
-      .delete<AddressResponse>(`/user/addresses/${addressId}`)
+      .delete<AddressResponse>(`${USER_BASE_URL}/addresses/${addressId}`)
       .then((res) => res.data);
   },
 };
