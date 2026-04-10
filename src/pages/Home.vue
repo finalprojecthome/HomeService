@@ -34,10 +34,9 @@ const featuredServices = [
   },
 ] as const;
 
-const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-55px] md:right-[-18px] md:max-w-[520px]  lg:w-[400px] xl:w-[520px] lg:bottom-[-150px] lg:right-[-18px] 2xl:right-[100px] 2xl:bottom-[-150px]"
+const heroClass =
+  "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-55px] md:right-[-18px] md:max-w-[520px]  lg:w-[400px] xl:w-[520px] lg:bottom-[-150px] lg:right-[-18px] 2xl:right-[100px] 2xl:bottom-[-150px]";
 </script>
-
-
 
 <template>
   <MainWithNarbar>
@@ -46,10 +45,8 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
       <section
         class="relative bg-blue-100 w-full h-[654px] md:h-[400px] lg:h-[540px] mx-auto px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-40 pt-14 pb-8 md:pt-20 md:pb-10 overflow-hidden"
       >
-        <div class="mx-auto ">
-          <div
-            class="flex flex-col"
-          >
+        <div class="mx-auto">
+          <div class="flex flex-col">
             <div class="flex flex-col 2xl:px-50">
               <h1
                 class="text-[40px] sm:text-[34px] md:text-[44px] lg:text-[64px] font-bold text-blue-700 leading-[1.08]"
@@ -64,18 +61,14 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
               </p>
 
               <p
-                class=" w-[290px] md:w-[400px] lg:w-[515px] text-[18px] md:text-[20px] lg:text-[24px] text-gray-700 mt-8 leading-relaxed"
+                class="w-[290px] md:w-[400px] lg:w-[515px] text-[18px] md:text-[20px] lg:text-[24px] text-gray-700 mt-8 leading-relaxed"
               >
-                ซ่อมเครื่องใช้ไฟฟ้า ซ่อมแอร์ ทำความสะอาดบ้าน 
-                โดยพนักงานแม่บ้าน และช่างมืออาชีพ
+                ซ่อมเครื่องใช้ไฟฟ้า ซ่อมแอร์ ทำความสะอาดบ้าน โดยพนักงานแม่บ้าน
+                และช่างมืออาชีพ
               </p>
 
               <div class="mt-8">
-                <NavigationButton
-                  to="/services"
-                  size="lg"
-                  class="w-fit"
-                >
+                <NavigationButton to="/services" size="lg" class="w-fit">
                   เช็คราคาบริการ
                 </NavigationButton>
               </div>
@@ -96,9 +89,7 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
 
       <!-- Featured services -->
       <section class="py-8 md:py-12">
-        <div
-          class="w-full lg:px-20 xl:px-32 2xl:px-40"
-        >
+        <div class="w-full lg:px-20 xl:px-32 2xl:px-40">
           <h2 class="style-headline-2 text-blue-950 text-center">
             บริการยอดฮิตของเรา
           </h2>
@@ -127,8 +118,10 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
       </section>
 
       <!-- Job / partner banner -->
-      <section class="relative bg-blue-600  md:max-h-[378px] overflow-hidden">
-        <div class="flex flex-col md:flex-row gap-8 md:gap-6 lg:gap-32 items-stretch">
+      <section class="relative bg-blue-600 md:max-h-[378px] overflow-hidden">
+        <div
+          class="flex flex-col md:flex-row gap-8 md:gap-6 lg:gap-32 items-stretch"
+        >
           <div>
             <img
               :src="jobImgSrc"
@@ -137,19 +130,27 @@ const heroClass = "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-5
             />
           </div>
 
-          <div class="text-white flex flex-col pl-6 md:pl-0 items-start lg:justify-center md:items-start h-[400px] md:h-auto">
-            <h3 class="style-headline-1 md:style-headline-2 lg:style-headline-1 text-white mt-3 ">
+          <div
+            class="text-white flex flex-col pl-6 md:pl-0 items-start lg:justify-center md:items-start h-[400px] md:h-auto"
+          >
+            <h3
+              class="style-headline-1 md:style-headline-2 lg:style-headline-1 text-white mt-3"
+            >
               มาร่วมเป็นพนักงานซ่อม<br />
               กับ HomeServices
             </h3>
 
-            <p class="style-headline-5 md:style-body-4 lg:style-headline-3 text-blue-100 mt-4 leading-relaxed">
+            <p
+              class="style-headline-5 md:style-body-4 lg:style-headline-3 text-blue-100 mt-4 leading-relaxed"
+            >
               เข้ารับการฝึกอบรมที่ได้มาตรฐาน ฟรี!<br />
               และยังได้รับค่าตอบแทนที่มากขึ้นกว่าเดิม
             </p>
 
             <div class="mt-7 flex flex-col lg:flex-row items-start gap-3">
-              <p class="style-headline-2 lg:style-headline-1 text-blue-100">ติดต่อที่อีเมล</p>
+              <p class="style-headline-2 lg:style-headline-1 text-blue-100">
+                ติดต่อที่อีเมล
+              </p>
               <a
                 href="mailto:job@homeservices.co"
                 class="style-headline-2 lg:style-headline-1 text-white font-semibold hover:underline"

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import Badge from './ui/Badge.vue';
-import ActionButton from './ui/ActionButton.vue';
 import { TagIcon } from './icons/icons';
+import cn from '../utils/cn';
+import { baseStyle, sizes, variants } from '../constants/buttonVariant';
 
 type CategoryVariant = 'blue' | 'purple' | 'green' | 'yellow' | 'gray';
 
@@ -13,9 +14,12 @@ const props = withDefaults(defineProps<{
   title: string;
   price: number | string;
   ctaText?: string;
+  /** Whole card is clickable and emits `cta-click` when true. */
+  interactive?: boolean;
 }>(), {
   categoryVariant: 'blue',
   ctaText: 'เลือกบริการ', // ตาม Figma
+  interactive: false,
 });
 
 const imageLoadError = ref(false);
@@ -43,11 +47,40 @@ const emit = defineEmits<{
   (e: 'cta-click'): void
 }>();
 
+const ctaSpanClass = computed(() =>
+  cn(
+    baseStyle,
+    sizes.sm,
+    variants.ghost,
+    'mt-2 p-0 font-semibold underline underline-offset-2 pointer-events-none',
+  ),
+);
+
+const rootClass = computed(() =>
+  cn(
+    'style-card-box style-shadow overflow-hidden w-full max-w-none sm:max-w-[340px] md:max-w-[320px] flex flex-col',
+    props.interactive &&
+      'cursor-pointer transition-all duration-300 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600',
+  ),
+);
+
+function onCardActivate() {
+  if (!props.interactive) return;
+  emit('cta-click');
+}
 
 </script>
 
 <template>
-  <div class="style-card-box style-shadow overflow-hidden w-full max-w-none sm:max-w-[340px] md:max-w-[320px] flex flex-col">
+  <div
+    :class="rootClass"
+    :role="interactive ? 'button' : undefined"
+    :tabindex="interactive ? 0 : undefined"
+    :aria-label="interactive ? `${ctaText} — ${title}` : undefined"
+    @click="onCardActivate"
+    @keydown.enter.prevent="onCardActivate"
+    @keydown.space.prevent="onCardActivate"
+  >
     <div
       v-if="imageSrc && !imageLoadError"
       class="h-[150px] sm:h-[165px] md:h-[190px] w-full bg-gray-100 overflow-hidden"
@@ -138,9 +171,7 @@ const emit = defineEmits<{
         <span>ค่าบริการประมาณ {{ typeof price === 'number' ? price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : price }} ฿</span>
       </div>
       
-      <ActionButton variant="ghost" @click="emit('cta-click')" class="mt-2 p-0 font-semibold underline underline-offset-2">
-        {{ ctaText }}
-      </ActionButton>
+      <span :class="ctaSpanClass">{{ ctaText }}</span>
     </div>
   </div>
 </template>

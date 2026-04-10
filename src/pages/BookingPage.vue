@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import BookingLayout from "../components/layouts/BookingLayout.vue";
 import airBanner from "../assets/booking/airBanner.png";
 import type { BreadcrumbItem } from "../components/ui/Breadcrumb.vue";
@@ -19,13 +20,30 @@ import { fetchSubServices } from "../services/serviceApi";
 import { createOrder } from "../services/orderApi";
 import type { UserAddress } from "../types/user";
 
+const route = useRoute();
 
+const DEFAULT_BOOKING_SERVICE_ID = "33";
+const DEFAULT_BOOKING_SERVICE_NAME = "ล้างแอร์";
 
+function firstQueryValue(
+  value: string | string[] | undefined | null,
+): string | undefined {
+  if (value == null || value === "") return undefined;
+  return Array.isArray(value) ? value[0] : value;
+}
 
-const serviceName = "ล้างแอร์";
+const serviceId = computed(
+  () =>
+    firstQueryValue(route.query.serviceId as string | string[] | undefined) ??
+    DEFAULT_BOOKING_SERVICE_ID,
+);
 
-
-const serviceId = "33";
+const serviceName = computed(
+  () =>
+    firstQueryValue(
+      route.query.serviceName as string | string[] | undefined,
+    ) ?? DEFAULT_BOOKING_SERVICE_NAME,
+);
 
 const addressStore = useAddressStore();
 
@@ -33,10 +51,10 @@ const subServices = ref<SubService[]>([]);
 
 const selectedSubServices = ref<SelectedSubService[]>([]);
 
-const breadcrumbItems: BreadcrumbItem[] = [
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { label: "บริการของเรา", clickable: true },
-  { label: "ล้างแอร์", active: true },
-];
+  { label: serviceName.value, active: true },
+]);
 
 const steps: StepperStep[] = [
   { id: "service", label: "เลือกรายการ" },
@@ -282,11 +300,11 @@ function validateStep3() {
 
   return isValid;
 }
-onMounted(async () => {
+async function loadSubServicesForBooking() {
   try {
-    const services = await fetchSubServices(serviceId);
+    const services = await fetchSubServices(serviceId.value);
 
-    subServices.value = services.map((item: any) => ({
+    subServices.value = services.map((item) => ({
       id: String(item.id),
       name: item.name,
       price: item.pricePerUnit,
@@ -296,13 +314,23 @@ onMounted(async () => {
   } catch (error) {
     console.error("โหลดข้อมูลไม่สำเร็จ", error);
   }
+}
+
+onMounted(() => {
+  void loadSubServicesForBooking();
+});
+
+watch(serviceId, () => {
+  selectedSubServices.value = [];
+  currentStep.value = 0;
+  void loadSubServicesForBooking();
 });
 </script>
 
 <template>
-  <BookingLayout
+   <BookingLayout
     :banner-image="airBanner"
-    banner-alt="ล้างแอร์"
+    :banner-alt="serviceName"
     :breadcrumb-items="breadcrumbItems"
     :steps="steps"
     :active-step= "currentStep"
