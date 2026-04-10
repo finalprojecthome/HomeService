@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import FilterBar from "../components/FilterBar.vue";
 import ServiceCard from "../components/ServiceCard.vue";
@@ -17,6 +18,7 @@ const selectedPrice = ref("");
 const selectedPriceRange = ref<[number, number]>([0, 2000]);
 const selectedSort = ref("");
 const { scrollDirection, scrollY } = useScrollState();
+const router = useRouter();
 
 const isHideNavbar = computed(
   () => scrollY.value > 60 && scrollDirection.value === "down",
@@ -129,6 +131,13 @@ function clearFilters() {
   currentPage.value = 1;
   resetSearch();
 }
+
+function goToBooking(item: ServiceItem) {
+  void router.push({
+    name: "booking",
+    query: { serviceId: item.id, serviceName: item.title },
+  });
+}
 </script>
 
 <template>
@@ -194,13 +203,14 @@ function clearFilters() {
           <ServiceCard
             v-for="(item, index) in paginatedServiceItems"
             :key="item.id || index"
+            interactive
             :title="item.title"
             :category="item.category"
             :categoryVariant="item.categoryVariant"
             :price="item.price"
             :imageSrc="item.imageSrc"
             ctaText="เลือกบริการ"
-            class="cursor-pointer hover:scale-105 transition-all duration-300"
+            @cta-click="goToBooking(item)"
           />
         </div>
         <div
