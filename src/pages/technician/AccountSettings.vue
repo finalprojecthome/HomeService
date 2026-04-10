@@ -12,8 +12,11 @@ const formData = ref({
   lastName: '',
   phone: '',
   address: '',
-  subDistrictId: 1, // Defaulting to 1, since we don't have sub-district picker built
+  subDistrictId: 1,
   isAvailable: false,
+  bio: '',
+  latitude: 0,
+  longitude: 0,
   serviceIds: [] as number[],
 });
 
@@ -34,6 +37,9 @@ const loadProfile = async () => {
     formData.value.address = profile.addressDetail || '';
     formData.value.subDistrictId = profile.subDistrictId || 1;
     formData.value.isAvailable = profile.isAvailable;
+    formData.value.bio = profile.bio || '';
+    formData.value.latitude = profile.latitude || 0;
+    formData.value.longitude = profile.longitude || 0;
 
     // Set service IDs
     formData.value.serviceIds = profile.serviceIds || [];
@@ -60,6 +66,9 @@ const handleConfirm = async () => {
       addressDetail: formData.value.address,
       subDistrictId: formData.value.subDistrictId,
       isAvailable: formData.value.isAvailable,
+      bio: formData.value.bio,
+      latitude: formData.value.latitude,
+      longitude: formData.value.longitude,
       serviceIds: formData.value.serviceIds
     };
 
@@ -77,18 +86,19 @@ const handleRefreshLocation = () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        try {
-          // Use OpenStreetMap's free Nominatim API to get real address
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`);
-          const data = await res.json();
-          if (data && data.display_name) {
-            formData.value.address = data.display_name;
-          } else {
-            formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-          }
-        } catch (e) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          formData.value.latitude = lat;
+          formData.value.longitude = lng;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`);
+            const data = await res.json();
+            if (data && data.display_name) {
+              formData.value.address = data.display_name;
+            } else {
+              formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+          } catch (e) {
           console.error("Geocoding error", e);
           formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
         }
@@ -147,6 +157,14 @@ const handleRefreshLocation = () => {
             type="text" 
             class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
           />
+
+          <label class="text-gray-900 style-headline-5">Bio / ข้อมูลแนะนำตัว</label>
+          <textarea 
+            v-model="formData.bio" 
+            rows="3"
+            class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+            placeholder="เขียนแนะนำตัวหรือความถนัดของคุณที่นี่..."
+          ></textarea>
 
           <label class="text-gray-900 style-headline-5">ตำแหน่งที่อยู่ปัจจุบัน<span class="text-red-500">*</span></label>
           <div class="flex items-center gap-2">

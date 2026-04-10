@@ -26,8 +26,8 @@ const allJobs = ref<any[]>([]);
 const loadJobs = async () => {
     try {
         const jobs = await technicianApi.getMyJobs();
-        // History tasks include COMPLETED, COMPLETED_BY_TECHNICIAN, etc.
-        allJobs.value = jobs.filter(j => ['COMPLETED'].includes(j.status));
+        // History tasks now include COMPLETED and CANCELLED
+        allJobs.value = jobs.filter(j => ['COMPLETED', 'CANCELLED'].includes(j.status));
     } catch (e) {
         console.error("Failed to load history jobs", e);
     }
@@ -44,7 +44,7 @@ const displayOrders = computed(() => {
             id: job.orderId,
             serviceTitle: job.serviceItems && job.serviceItems.length > 0 ? job.serviceItems[0] : 'บริการซ่อม',
             date: `${dateObj.toLocaleDateString('th-TH')} เวลา ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`,
-            price: job.totalPrice ? `${job.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿` : '0.00 ฿'
+            price: job.totalPrice ? `${Number(job.totalPrice).toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿` : '0.00 ฿'
         }
     }).filter(job => {
         if (service.value && job.serviceTitle !== service.value) return false;

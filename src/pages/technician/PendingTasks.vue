@@ -33,8 +33,8 @@ const allJobs = ref<any[]>([]);
 const loadJobs = async () => {
     try {
         const jobs = await technicianApi.getMyJobs();
-        // Pending tasks include ACCEPTED, IN_PROGRESS, PENDING (if applicable to tech)
-        allJobs.value = jobs.filter(j => ['ACCEPTED', 'IN_PROGRESS', 'PENDING'].includes(j.status));
+        // Pending tasks now use backend TechnicianJobStatus
+        allJobs.value = jobs.filter(j => ['ASSIGNED', 'IN_PROGRESS'].includes(j.status));
     } catch (e) {
         console.error("Failed to load jobs", e);
     }
@@ -51,7 +51,7 @@ const displayOrders = computed(() => {
             id: job.orderId,
             serviceTitle: job.serviceItems && job.serviceItems.length > 0 ? job.serviceItems[0] : 'บริการซ่อม',
             date: `${dateObj.toLocaleDateString('th-TH')} เวลา ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`,
-            price: job.totalPrice ? `${job.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿` : '0.00 ฿',
+            price: job.totalPrice ? `${Number(job.totalPrice).toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿` : '0.00 ฿',
             rawStatus: job.status,
             rawDate: dateObj.getTime()
         }

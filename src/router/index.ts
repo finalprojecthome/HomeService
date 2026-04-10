@@ -53,7 +53,7 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลผู้ใช้งาน",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -63,20 +63,8 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลที่อยู่",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
-      children: [
-        {
-          path: "add",
-          name: "addAddress",
-          component: AccountStubPage,
-        },
-        {
-          path: "edit/:id",
-          name: "editAddress",
-          component: AccountStubPage,
-        },
-      ],
     },
     {
       path: "/repair-orders",
@@ -85,7 +73,7 @@ const router = createRouter({
       meta: {
         title: "รายการคำสั่งซ่อม",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -95,7 +83,7 @@ const router = createRouter({
       meta: {
         title: "ประวัติการซ่อม",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -105,20 +93,26 @@ const router = createRouter({
       meta: {
         title: "เปลี่ยนรหัสผ่าน",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
       path: "/auth/login",
       name: "login",
       component: Login,
-      meta: { title: "เข้าสู่ระบบ" },
+      meta: {
+        title: "เข้าสู่ระบบ",
+        requiresGuest: true,
+      },
     },
     {
       path: '/technician',
       component: TechnicianLayout,
-      meta: { requiresTechnician: true },
       redirect: '/technician/requests',
+      meta: {
+        requiresAuth: true,
+        roles: ['technician']
+      },
       children: [
         {
           path: 'requests',
@@ -152,7 +146,6 @@ const router = createRouter({
         }
       ]
     },
-
     {
       path: "/login",
       redirect: "/auth/login",
@@ -219,7 +212,6 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
-  const requiresTechnician = to.matched.some((record) => record.meta.requiresTechnician);
 
   // 1. Handle Admin Authentication
   if (requiresAdmin) {
@@ -252,41 +244,33 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
-  // 2. Handle Technician Authentication
-  if (requiresTechnician) {
-    const token = localStorage.getItem("accessToken");
-    const role = localStorage.getItem("userRole");
-
-    if (!token || role !== "technician") {
-      alert("กรุณาเข้าสู่ระบบด้วยบัญชีช่าง (Technician) เพื่อเข้าถึงส่วนนี้");
-      return next({
-        name: "login",
-        query: { redirect: to.fullPath },
-      });
-    }
-    return next();
-  }
-
-  // 3. Handle Regular User Authentication
+  // 2. Handle User & Technician Authentication
   const authStore = useAuthStore();
   await authStore.initializeAuth();
 
   const isAuthenticated = Boolean(authStore.user);
   const role = authStore.user?.role;
 
-  // Check if the route requires authentication
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: "login" });
-  }
-
+  // Guest checking
   if (to.meta.requiresGuest && isAuthenticated) {
     return next({ name: "home" });
   }
 
-  // Check if the route has role restrictions
-  if (to.meta.requiresAuth && to.meta.roles && role) {
+  // Auth checking
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next({
+      name: "login",
+      query: { redirect: to.fullPath },
+    });
+  }
+
+  // Role checking
+  if (to.meta.requiresAuth && to.meta.roles) {
     const roles = to.meta.roles as string[];
-    if (!roles.includes(role)) {
+    // Normalize role comparison (some use 'user', some 'customer')
+    const currentRole = role === "customer" ? "user" : role;
+    
+    if (role && !roles.includes(role) && !roles.includes(currentRole as string)) {
       showCustomToast({
         variant: "error",
         title: "ไม่สามารถเข้าถึงหน้านี้",

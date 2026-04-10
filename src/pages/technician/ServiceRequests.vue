@@ -31,7 +31,7 @@ const loadJobs = async () => {
         dateStr: dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' }),
         time: dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
         serviceName: job.serviceItems ? job.serviceItems.join(', ') : '',
-        price: job.totalPrice ? job.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00',
+        price: job.totalPrice ? Number(job.totalPrice).toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '0.00',
         location: job.addressDetail || 'ไม่ระบุที่อยู่',
       };
     });
