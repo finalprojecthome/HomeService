@@ -15,6 +15,7 @@ import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 import { useAuthStore } from "../stores";
 import { showCustomToast } from "../utils/toast";
 
+const BookingPage = () => import("../pages/BookingPage.vue");
 const Login = () => import("../pages/Login.vue");
 const Register = () => import("../pages/Register.vue");
 const AdminCategoryList = () =>
@@ -170,11 +171,31 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: "/booking",
+      name: "booking",
+      component: BookingPage,
+      meta: {requiresAuth: true}
+    },
   ],
 });
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, _from) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+
+  if (requiresAuth) {
+    const token = localStorage.getItem("accessToken");
+
+
+    if (!token) {
+      return {
+        name: "login",
+        query: { redirect: to.fullPath },
+      };
+    }
+  }
 
   if (requiresAdmin) {
     await initializeAdminAuthSession();
@@ -215,11 +236,14 @@ router.beforeEach(async (to, _from, next) => {
 
     // Check if the route requires authentication
     if (to.meta.requiresAuth && !isAuthenticated) {
-      return next({ name: "login" });
+      return {
+        name: "login",
+        query: { redirect: to.fullPath },
+      };
     }
 
     if (to.meta.requiresGuest && isAuthenticated) {
-      return next({ name: "home" });
+      return { name: "home" };
     }
 
     // Check if the route has role restrictions
@@ -231,11 +255,11 @@ router.beforeEach(async (to, _from, next) => {
           title: "ไม่สามารถเข้าถึงหน้านี้",
           description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
         });
-        return next({ name: "home" });
+        return { name: "home" };
       }
     }
 
-    next();
+    return true;
   }
 });
 
