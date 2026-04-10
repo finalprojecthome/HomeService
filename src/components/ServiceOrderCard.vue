@@ -3,8 +3,9 @@ import Badge from './ui/Badge.vue';
 import ActionButton from './ui/ActionButton.vue';
 import Icon from './ui/Icon.vue';
 import { UserIcon } from './icons/icons';
+import type { OrderStatus } from '../types/order';
 
-export type OrderStatus = 'pending' | 'in-progress' | 'completed' | 'canceled';
+export type { OrderStatus };
 type BadgeVariant = 'blue' | 'purple' | 'green' | 'yellow' | 'gray';
 
 const props = withDefaults(defineProps<{
