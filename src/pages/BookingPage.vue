@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import BookingLayout from "../components/layouts/BookingLayout.vue";
 import airBanner from "../assets/booking/airBanner.png";
 import type { BreadcrumbItem } from "../components/ui/Breadcrumb.vue";
@@ -10,19 +10,14 @@ import BookingStep1, {
 } from "../features/booking/components/BookingStep1.vue";
 import BookingStep2, {
   type BookingStep2Value,
-  type SelectOption,
 } from "../features/booking/components/BookingStep2.vue";
+import { useAddressStore } from "../stores";
 import BookingStep3, {
   type BookingStep3Value,
 } from "../features/booking/components/BookingStep3.vue";
-import { onMounted } from "vue";
 import { fetchSubServices } from "../services/serviceApi";
-import {
-  fetchProvinces,
-  fetchDistricts,
-  fetchSubDistricts,
-} from "../services/addressApi";
-import { createOrder, type CreateOrderPayload} from "../services/orderApi";
+import { createOrder } from "../services/orderApi";
+import type { UserAddress } from "../types/user";
 
 
 
@@ -30,7 +25,9 @@ import { createOrder, type CreateOrderPayload} from "../services/orderApi";
 const serviceName = "ล้างแอร์";
 
 
-const serviceId = "1";
+const serviceId = "33";
+
+const addressStore = useAddressStore();
 
 const subServices = ref<SubService[]>([]);
 
@@ -51,64 +48,23 @@ const steps: StepperStep[] = [
 const step2Value = ref<BookingStep2Value>({
   date: null as string | null,
   time: null as string | null,
-  houseNo: "",
-  provinceId: "",
-  districtId: "",
-  subDistrictId: "",
+  addressId: null,
 });
 
-const provinceOptions = ref<SelectOption[]>([]);
-
-const districtOptions = ref<SelectOption[]>([]);
-const subDistrictOptions = ref<SelectOption[]>([]);
-
-async function handleProvinceChange(provinceId: string) {
-  console.log("province changed:", provinceId);
-
-  // reset ค่า
-  step2Value.value.districtId = "";
-  step2Value.value.subDistrictId = "";
-  subDistrictOptions.value = [];
-  districtOptions.value = [];
-  try {
-    const districts = await fetchDistricts(provinceId);
-
-    districtOptions.value = districts.map((item) => ({
-      label: item.name,
-      value: String(item.id),
-    }));
-  } catch (error) {
-    console.error("โหลด district ไม่ได้", error);
-  }
+function formatUserAddressLine(address: UserAddress): string {
+  const locality =
+    address.province.name === "กรุงเทพมหานคร"
+      ? `แขวง${address.subDistrict.name}, เขต${address.district.name}`
+      : `ตำบล${address.subDistrict.name}, อำเภอ${address.district.name}`;
+  return `${address.addressDetail}, ${locality}, จังหวัด${address.province.name}, ${address.postCode}`;
 }
-const provinceLabel = computed(() => {
-  return (
-    provinceOptions.value.find(
-      (item) => item.value === step2Value.value.provinceId
-    )?.label || "-"
-  );
-});
 
-const districtLabel = computed(() => {
-  return (
-    districtOptions.value.find((item) => item.value === step2Value.value.districtId)?.label || "-"
-  );
-});
-
-const subDistrictLabel = computed(() => {
-  return (
-    subDistrictOptions.value.find((item) => item.value === step2Value.value.subDistrictId)?.label || "-"
-  );
-});
 const addressSummary = computed(() => {
-  const houseNo = step2Value.value.houseNo?.trim() || "";
-  const subDistrict = subDistrictLabel.value !== "-" ? subDistrictLabel.value : "";
-  const district = districtLabel.value !== "-" ? districtLabel.value : "";
-  const province = provinceLabel.value !== "-" ? provinceLabel.value : "";
-
-  if (!houseNo && !subDistrict && !district && !province) return "-";
-
-  return [houseNo, subDistrict, district, province].filter(Boolean).join(" ");
+  const selected = addressStore.addresses.find(
+    (a) => a.id === step2Value.value.addressId
+  );
+  if (!selected) return "-";
+  return formatUserAddressLine(selected);
 });
 function formatSummaryDate(value: string | null) {
   if (!value) return "-";
@@ -119,30 +75,10 @@ function formatSummaryDate(value: string | null) {
   return `${day}/${month}/${year}`;
 }
 
-async function handleDistrictChange(districtId: string) {
-  console.log("district changed:", districtId);
-
-  step2Value.value.subDistrictId = "";
-
-  try {
-    const subDistricts = await fetchSubDistricts(districtId);
-
-    subDistrictOptions.value = subDistricts.map((item) => ({
-      label: item.name,
-      value: String(item.id),
-    }));
-  } catch (error) {
-    console.error("โหลด subdistrict ไม่ได้", error);
-  }
-}
-
 const step2Errors = ref({
   date: "",
   time: "",
-  houseNo: "",
-  provinceId: "",
-  districtId: "",
-  subDistrictId: "",
+  addressId: "",
 });
 
 const step3Errors = ref({
@@ -168,10 +104,8 @@ const canGoNext = computed(() => {
     return (
       !!step2Value.value.date &&
       !!step2Value.value.time &&
-      !!step2Value.value.houseNo.trim() &&
-      !!step2Value.value.provinceId &&
-      !!step2Value.value.districtId &&
-      !!step2Value.value.subDistrictId
+      step2Value.value.addressId != null &&
+      addressStore.addresses.some((a) => a.id === step2Value.value.addressId)
     );
   }
 
@@ -237,9 +171,19 @@ async function handleNext() {
   const isValid = validateStep3();
   if (!isValid) return;
 
+  const selectedAddress = addressStore.addresses.find(
+    (a) => a.id === step2Value.value.addressId
+  );
+  if (!selectedAddress) {
+    console.error("ไม่พบที่อยู่ที่เลือก");
+    return;
+  }
+
   const payload = {
-    addressDetail: step2Value.value.houseNo,
-    subDistrictId: Number(step2Value.value.subDistrictId),
+    addressDetail: selectedAddress.addressDetail,
+    subDistrictId: selectedAddress.subDistrict.id,
+    latitude: selectedAddress.latitude,
+    longitude: selectedAddress.longitude,
     scheduledAt: `${step2Value.value.date}T${step2Value.value.time}:00Z`,
     items: selectedSubServices.value.map((item) => ({
       serviceName: item.name,
@@ -264,10 +208,7 @@ function validateStep2() {
   step2Errors.value = {
     date: "",
     time: "",
-    houseNo: "",
-    provinceId: "",
-    districtId: "",
-    subDistrictId: "",
+    addressId: "",
   };
 
   let isValid = true;
@@ -282,28 +223,15 @@ function validateStep2() {
     isValid = false;
   }
 
-  if (!step2Value.value.houseNo.trim()) {
-    step2Errors.value.houseNo = "กรุณากรอกบ้านเลขที่";
-    isValid = false;
-  }
-
-  if (!step2Value.value.provinceId) {
-    step2Errors.value.provinceId = "กรุณาเลือกจังหวัด";
-    isValid = false;
-  }
-
-  if (!step2Value.value.districtId) {
-    step2Errors.value.districtId = "กรุณาเลือกอำเภอ / เขต";
-    isValid = false;
-  }
-
-  if (!step2Value.value.subDistrictId) {
-    step2Errors.value.subDistrictId = "กรุณาเลือกตำบล / แขวง";
+  if (
+    step2Value.value.addressId == null ||
+    !addressStore.addresses.some((a) => a.id === step2Value.value.addressId)
+  ) {
+    step2Errors.value.addressId = "กรุณาเลือกที่อยู่";
     isValid = false;
   }
 
   return isValid;
-  
 }
 function validateStep3() {
   step3Errors.value = {
@@ -356,10 +284,7 @@ function validateStep3() {
 }
 onMounted(async () => {
   try {
-    const [services, provinces] = await Promise.all([
-      fetchSubServices(serviceId),
-      fetchProvinces(),
-    ]);
+    const services = await fetchSubServices(serviceId);
 
     subServices.value = services.map((item: any) => ({
       id: String(item.id),
@@ -367,11 +292,6 @@ onMounted(async () => {
       price: item.pricePerUnit,
       unitLabel: item.unit,
       summaryLabel: "รายการ",
-    }));
-
-    provinceOptions.value = provinces.map((item) => ({
-      label: item.name,
-      value: String(item.id),
     }));
   } catch (error) {
     console.error("โหลดข้อมูลไม่สำเร็จ", error);
@@ -398,12 +318,7 @@ onMounted(async () => {
       <BookingStep2
         v-else-if="currentStep === 1"
         v-model="step2Value"
-        :province-options="provinceOptions"
-        :district-options="districtOptions"
-        :sub-district-options="subDistrictOptions"
         :errors="step2Errors"
-        @province-change="handleProvinceChange"
-        @district-change="handleDistrictChange"
       />
 
       <BookingStep3

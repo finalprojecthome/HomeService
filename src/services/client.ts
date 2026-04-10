@@ -1,7 +1,10 @@
 import axios from "axios";
 
+/** ใช้ VITE_ เป็นหลัก — Vite จะฝังเฉพาะ env ที่ขึ้นต้น VITE_ ใน client */
 const baseURL =
-  import.meta.env.SPRING_BOOT_PUBLIC_API_URL ?? "http://localhost:8080";
+  import.meta.env.VITE_API_BASE_URL ??
+  import.meta.env.SPRING_BOOT_PUBLIC_API_URL ??
+  "http://localhost:8080";
 
 export const createApiInstance = (withAuth: boolean) => {
   const instance = axios.create({
