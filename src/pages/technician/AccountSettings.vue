@@ -4,6 +4,8 @@ import ActionButton from '../../components/ui/ActionButton.vue';
 import ToggleSwitch from '../../components/ui/ToggleSwitch.vue';
 import CheckBox from '../../components/ui/CheckBox.vue';
 import technicianApi from '../../services/api/technician';
+import locationApi from '../../services/api/location';
+import type { Province, District, SubDistrict } from '../../services/api/location';
 import { showCustomToast } from '../../utils/toast';
 
 // Form State
@@ -23,11 +25,24 @@ const formData = ref({
 const availableServices = ref<{id: number, title: string}[]>([]);
 const isLoading = ref(true);
 
+const provinces = ref<Province[]>([]);
+const districts = ref<District[]>([]);
+const subDistricts = ref<SubDistrict[]>([]);
+
+const selectedProvince = ref<number | null>(null);
+const selectedDistrict = ref<number | null>(null);
+
 const loadProfile = async () => {
   isLoading.value = true;
   try {
-    const profile = await technicianApi.getProfile();
-    availableServices.value = await technicianApi.getServices();
+    const [profile, services, allProvinces] = await Promise.all([
+      technicianApi.getProfile(),
+      technicianApi.getServices(),
+      locationApi.getProvinces()
+    ]);
+
+    availableServices.value = services;
+    provinces.value = allProvinces;
 
     // Split name into first and last name if possible
     const nameParts = (profile.name || '').split(' ');
@@ -35,18 +50,38 @@ const loadProfile = async () => {
     formData.value.lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
     formData.value.phone = profile.phone || '';
     formData.value.address = profile.addressDetail || '';
-    formData.value.subDistrictId = profile.subDistrictId || 1;
+    formData.value.subDistrictId = profile.subDistrictId || 0;
     formData.value.isAvailable = profile.isAvailable;
     formData.value.bio = profile.bio || '';
     formData.value.latitude = profile.latitude || 0;
     formData.value.longitude = profile.longitude || 0;
-
-    // Set service IDs
     formData.value.serviceIds = profile.serviceIds || [];
+
+    // Attempt to reverse-load the hierarchy from subDistrictId
+    if (formData.value.subDistrictId) {
+      // Note: This would ideally be done by a single "path" API call, 
+      // but for now we'll just let the user re-select or implement if needed.
+    }
   } catch (error) {
     showCustomToast({ variant: 'error', title: 'เกิดข้อผิดพลาด', description: 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้' });
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleProvinceChange = async () => {
+  if (selectedProvince.value) {
+    districts.value = await locationApi.getDistricts(selectedProvince.value);
+    selectedDistrict.value = null;
+    subDistricts.value = [];
+    formData.value.subDistrictId = 0;
+  }
+};
+
+const handleDistrictChange = async () => {
+  if (selectedDistrict.value) {
+    subDistricts.value = await locationApi.getSubDistricts(selectedDistrict.value);
+    formData.value.subDistrictId = 0;
   }
 };
 
@@ -167,14 +202,35 @@ const handleRefreshLocation = () => {
           ></textarea>
 
           <label class="text-gray-900 style-headline-5">ตำแหน่งที่อยู่ปัจจุบัน<span class="text-red-500">*</span></label>
-          <div class="flex items-center gap-2">
-            <input 
-              v-model="formData.address" 
-              type="text" 
-              readonly
-              class="w-full max-w-md border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed rounded-lg px-4 py-2 style-body-1 focus:outline-none" 
-            />
-            <ActionButton variant="secondary" @click="handleRefreshLocation" :disabled="isRefreshingLocation">{{ isRefreshingLocation ? 'กำลังค้นหา...' : 'รีเฟรช' }}</ActionButton>
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-2">
+              <input 
+                v-model="formData.address" 
+                type="text" 
+                readonly
+                placeholder="ปักหมุดตำแหน่งเพื่อความแม่นยำสูง"
+                class="w-full max-w-md border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed rounded-lg px-4 py-2 style-body-1 focus:outline-none" 
+              />
+              <ActionButton variant="secondary" @click="handleRefreshLocation" :disabled="isRefreshingLocation">{{ isRefreshingLocation ? 'กำลังค้นหา...' : 'รีเฟรช' }}</ActionButton>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 w-full max-w-md">
+              <select v-model="selectedProvince" @change="handleProvinceChange" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500">
+                <option :value="null" disabled>เลือกจังหวัด</option>
+                <option v-for="p in provinces" :key="p.provinceId" :value="p.provinceId">{{ p.name }}</option>
+              </select>
+              
+              <select v-model="selectedDistrict" @change="handleDistrictChange" :disabled="!selectedProvince" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                <option :value="null" disabled>เลือกอำเภอ</option>
+                <option v-for="d in districts" :key="d.districtId" :value="d.districtId">{{ d.name }}</option>
+              </select>
+
+              <select v-model="formData.subDistrictId" :disabled="!selectedDistrict" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                <option :value="0" disabled>เลือกตำบล</option>
+                <option v-for="sd in subDistricts" :key="sd.subDistrictId" :value="sd.subDistrictId">{{ sd.name }}</option>
+              </select>
+            </div>
+            <p class="text-gray-400 style-body-3">* หากยังไม่ได้ปักหมุด ระบบจะระบุพิกัดเริ่มต้นตามเขตที่คุณเลือก</p>
           </div>
         </div>
       </section>

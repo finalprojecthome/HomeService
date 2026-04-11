@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import CardRequest from '../../components/CardRequest.vue';
 import ActionButton from '../../components/ui/ActionButton.vue';
 import technicianApi from '../../services/api/technician';
@@ -18,6 +19,7 @@ interface RequestItem {
 
 const requestsList = ref<RequestItem[]>([]);
 const isLoading = ref(true);
+const router = useRouter();
 
 const loadJobs = async () => {
   isLoading.value = true;
@@ -122,7 +124,7 @@ const confirmAccept = async () => {
     try {
         await technicianApi.acceptJob(selectedRequest.value.id);
         showCustomToast({ title: 'สำเร็จ', description: 'รับงานสำเร็จแล้ว' });
-        loadJobs(); // Refresh jobs list
+        router.push('/technician/pending-tasks');
     } catch (err) {
         showCustomToast({ variant: 'error', title: 'ข้อผิดพลาด', description: 'ไม่สามารถรับงานได้' });
     } finally {
