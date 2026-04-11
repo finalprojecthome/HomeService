@@ -267,10 +267,11 @@ router.beforeEach(async (to, _from, next) => {
   // Role checking
   if (to.meta.requiresAuth && to.meta.roles) {
     const roles = to.meta.roles as string[];
-    // Normalize role comparison (some use 'user', some 'customer')
-    const currentRole = role === "customer" ? "user" : role;
+    // Cast to string for broad comparison
+    const userRole = role as string;
+    const currentRole = userRole === "customer" ? "user" : userRole;
     
-    if (role && !roles.includes(role) && !roles.includes(currentRole as string)) {
+    if (userRole && !roles.includes(userRole) && !roles.includes(currentRole)) {
       showCustomToast({
         variant: "error",
         title: "ไม่สามารถเข้าถึงหน้านี้",
