@@ -1,5 +1,5 @@
 import {
-  getAdminCategories,
+  getAdminCategoriesAll,
   type AdminCategoryItem,
 } from "./AdminCategory";
 
@@ -8,19 +8,37 @@ export type AdminCategoryOption = {
   value: number;
 };
 
-export async function getAllAdminCategories() {
-  const categories: AdminCategoryItem[] = [];
-  let page = 0;
-  let hasNext = true;
+const CATEGORY_CACHE_TTL_MS = 30_000;
 
-  while (hasNext) {
-    const response = await getAdminCategories({ page });
-    categories.push(...response.items);
-    hasNext = response.hasNext;
-    page += 1;
+let cachedCategories: AdminCategoryItem[] | null = null;
+let cachedAt = 0;
+let pendingCategoriesRequest: Promise<AdminCategoryItem[]> | null = null;
+
+export async function getAllAdminCategories() {
+  const now = Date.now();
+  if (cachedCategories && now - cachedAt < CATEGORY_CACHE_TTL_MS) {
+    return cachedCategories;
   }
 
-  return categories;
+  if (!pendingCategoriesRequest) {
+    pendingCategoriesRequest = getAdminCategoriesAll()
+      .then((categories) => {
+        cachedCategories = categories;
+        cachedAt = Date.now();
+        return categories;
+      })
+      .finally(() => {
+        pendingCategoriesRequest = null;
+      });
+  }
+
+  return pendingCategoriesRequest;
+}
+
+export function invalidateAllAdminCategoriesCache() {
+  cachedCategories = null;
+  cachedAt = 0;
+  pendingCategoriesRequest = null;
 }
 
 export async function getAllAdminCategoryOptions() {

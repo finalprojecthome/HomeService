@@ -150,12 +150,12 @@ async function fetchService() {
                 <div>
                   <div
                     v-if="service?.imageUrl"
-                    class="overflow-hidden rounded-[8px] border border-gray-200 bg-gray-100"
+                    class="w-fit overflow-hidden rounded-[8px] border border-gray-200"
                   >
                     <img
                       :src="service.imageUrl"
                       alt="Service image"
-                      class="h-[180px] w-full object-cover md:w-[360px]"
+                      class="block h-[180px] w-auto max-w-[360px] object-cover"
                     />
                   </div>
                   <p v-else class="style-body-3 text-gray-500">-</p>

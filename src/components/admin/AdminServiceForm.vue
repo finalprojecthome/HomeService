@@ -228,12 +228,12 @@ function handleImageChange(file: File | null) {
       <div class="space-y-4">
         <div
           v-if="existingImageUrl && !selectedImageFile"
-          class="overflow-hidden rounded-[8px] border border-gray-200 bg-gray-100"
+          class="w-fit overflow-hidden rounded-[8px] border border-gray-200"
         >
           <img
             :src="existingImageUrl"
             alt="Service image"
-            class="h-[180px] w-full object-cover md:w-[360px]"
+            class="block h-[180px] w-auto max-w-[360px] object-cover"
           />
         </div>
 

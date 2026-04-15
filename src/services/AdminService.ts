@@ -59,6 +59,11 @@ export type ReorderAdminServicesPayload = {
   page?: number;
 };
 
+export type AdminServiceDeleteImpact = {
+  serviceId: number;
+  requiresForceDelete: boolean;
+};
+
 export async function getAdminServices(params: GetAdminServicesParams = {}) {
   const { data } = await apiAdmin.get<AdminServicePageResponse>("/api/admin/services", {
     params: {
@@ -88,6 +93,14 @@ export async function getAdminServiceById(serviceId: number) {
   return data;
 }
 
+export async function getAdminServiceDeleteImpact(serviceId: number) {
+  const { data } = await apiAdmin.get<AdminServiceDeleteImpact>(
+    `/api/admin/services/${serviceId}/delete-impact`,
+  );
+
+  return data;
+}
+
 export async function updateAdminService(
   serviceId: number,
   payload: AdminServicePayload,
@@ -112,4 +125,17 @@ export async function reorderAdminServices(
   payload: ReorderAdminServicesPayload,
 ) {
   await apiAdmin.put("/api/admin/services/reorder", payload);
+}
+
+export async function uploadServiceImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const { data } = await apiAdmin.post<{ imageUrl: string }>(
+    "/api/admin/services/upload-image",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+
+  return data.imageUrl;
 }

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
@@ -9,6 +8,7 @@ import ActionButton from "../../../components/ui/ActionButton.vue";
 import TextInput from "../../../components/ui/TextInput.vue";
 import {
   deleteAdminService,
+  getAdminServiceDeleteImpact,
   getAdminServices,
   reorderAdminServices,
   type AdminServiceItem,
@@ -48,6 +48,7 @@ const totalItems = ref(0);
 const pageSize = ref(10);
 const isLoading = ref(false);
 const isDeleting = ref(false);
+const isDeleteImpactLoading = ref(false);
 const isReordering = ref(false);
 const errorMessage = ref("");
 
@@ -61,7 +62,11 @@ function showErrorToast(message: string) {
 
 const dragDots = Array.from({ length: 6 });
 const isBusy = computed(
-  () => isLoading.value || isDeleting.value || isReordering.value,
+  () =>
+    isLoading.value ||
+    isDeleting.value ||
+    isDeleteImpactLoading.value ||
+    isReordering.value,
 );
 
 watch(
@@ -136,11 +141,31 @@ function getCategoryBadgeClass(categoryId: number) {
   return palette[Math.abs(categoryId) % palette.length];
 }
 
-function openDeleteModal(row: AdminServiceRow) {
+async function openDeleteModal(row: AdminServiceRow) {
+  if (isBusy.value) {
+    return;
+  }
+
+  isDeleteImpactLoading.value = true;
   selectedService.value = row;
   requiresForceDelete.value = false;
   deleteModalErrorMessage.value = "";
-  isDeleteModalOpen.value = true;
+
+  try {
+    const impact = await getAdminServiceDeleteImpact(row.id);
+    requiresForceDelete.value = impact.requiresForceDelete;
+    isDeleteModalOpen.value = true;
+  } catch (error) {
+    const apiMessage = getApiErrorMessage(
+      error,
+      "ไม่สามารถตรวจสอบข้อมูลก่อนลบบริการได้",
+    );
+    deleteModalErrorMessage.value = apiMessage;
+    selectedService.value = null;
+    showErrorToast(apiMessage);
+  } finally {
+    isDeleteImpactLoading.value = false;
+  }
 }
 
 function closeDeleteModal() {
@@ -169,16 +194,7 @@ async function deleteService() {
     closeDeleteModal();
     await fetchServices();
   } catch (error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
     const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบบริการได้");
-
-    if (
-      axiosError.response?.status === 409 &&
-      apiMessage === "Service cannot be deleted because it has sub-services"
-    ) {
-      requiresForceDelete.value = true;
-      return;
-    }
 
     deleteModalErrorMessage.value = apiMessage;
   } finally {

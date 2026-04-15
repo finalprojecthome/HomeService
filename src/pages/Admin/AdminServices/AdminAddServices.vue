@@ -9,6 +9,7 @@ import { CheckedCircle } from "../../../components/icons";
 import ActionButton from "../../../components/ui/ActionButton.vue";
 import {
   createAdminService,
+  uploadServiceImage,
   type AdminServicePayload,
 } from "../../../services/AdminService";
 import { getAllAdminCategoryOptions } from "../../../services/adminCategoryOptions";
@@ -183,11 +184,11 @@ function validateForm() {
   return isValid;
 }
 
-function buildPayload(): AdminServicePayload {
+function buildPayload(imageUrl: string): AdminServicePayload {
   return {
     categoryId: categoryId.value as number,
     name: serviceName.value.trim(),
-    imageUrl: "",
+    imageUrl: imageUrl || null,
     subServices: subServices.value.map((row) => ({
       name: row.name.trim(),
       unit: row.unit.trim(),
@@ -211,7 +212,11 @@ async function handleSubmit() {
   isSubmitting.value = true;
 
   try {
-    await createAdminService(buildPayload());
+    let imageUrl = "";
+    if (selectedImageFile.value) {
+      imageUrl = await uploadServiceImage(selectedImageFile.value);
+    }
+    await createAdminService(buildPayload(imageUrl));
     isSuccessModalOpen.value = true;
   } catch (error) {
     const apiMessage = getApiErrorMessage(error, "ไม่สามารถสร้างบริการได้");

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { DropdownOption } from "../../../components/ui/Dropdown.vue";
-import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
@@ -12,8 +11,10 @@ import ActionButton from "../../../components/ui/ActionButton.vue";
 import Icon from "../../../components/ui/Icon.vue";
 import {
   deleteAdminService,
+  getAdminServiceDeleteImpact,
   getAdminServiceById,
   updateAdminService,
+  uploadServiceImage,
   type AdminServicePayload,
 } from "../../../services/AdminService";
 import { apiAdmin } from "../../../services/apiAdmin";
@@ -58,6 +59,7 @@ const errorMessage = ref("");
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 const isDeleting = ref(false);
+const isDeleteImpactLoading = ref(false);
 const isRemovingSubService = ref(false);
 const isDeleteModalOpen = ref(false);
 const requiresForceDelete = ref(false);
@@ -80,6 +82,7 @@ const isBusy = computed(
     isLoading.value ||
     isSubmitting.value ||
     isDeleting.value ||
+    isDeleteImpactLoading.value ||
     isRemovingSubService.value,
 );
 const canDelete = computed(() => serviceId.value !== null && !isLoading.value);
@@ -253,14 +256,29 @@ async function confirmRemoveSubService() {
   closeRemoveSubServiceModal();
 }
 
-function openDeleteModal() {
+async function openDeleteModal() {
   if (!canDelete.value || isSubmitting.value || isDeleting.value) {
     return;
   }
 
+  isDeleteImpactLoading.value = true;
   requiresForceDelete.value = false;
   deleteModalErrorMessage.value = "";
-  isDeleteModalOpen.value = true;
+
+  try {
+    const impact = await getAdminServiceDeleteImpact(serviceId.value as number);
+    requiresForceDelete.value = impact.requiresForceDelete;
+    isDeleteModalOpen.value = true;
+  } catch (error) {
+    const apiMessage = getApiErrorMessage(
+      error,
+      "ไม่สามารถตรวจสอบข้อมูลก่อนลบบริการได้",
+    );
+    deleteModalErrorMessage.value = apiMessage;
+    showErrorToast(apiMessage);
+  } finally {
+    isDeleteImpactLoading.value = false;
+  }
 }
 
 function closeDeleteModal() {
@@ -322,11 +340,11 @@ function validateForm() {
   return isValid;
 }
 
-function buildPayload(): AdminServicePayload {
+function buildPayload(imageUrl: string): AdminServicePayload {
   return {
     categoryId: categoryId.value as number,
     name: serviceName.value.trim(),
-    imageUrl: existingImageUrl.value || "",
+    imageUrl: imageUrl || null,
     subServices: subServices.value.map((row) => ({
       subServiceId: row.subServiceId ?? undefined,
       name: row.name.trim(),
@@ -351,7 +369,11 @@ async function handleSubmit() {
   isSubmitting.value = true;
 
   try {
-    await updateAdminService(serviceId.value, buildPayload());
+    let imageUrl = existingImageUrl.value || "";
+    if (selectedImageFile.value) {
+      imageUrl = await uploadServiceImage(selectedImageFile.value);
+    }
+    await updateAdminService(serviceId.value, buildPayload(imageUrl));
     goToServiceList();
   } catch (error) {
     const apiMessage = getApiErrorMessage(error, "ไม่สามารถบันทึกข้อมูลบริการได้");
@@ -386,17 +408,7 @@ async function deleteService() {
     closeDeleteModal();
     goToServiceList();
   } catch (error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
     const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบบริการได้");
-
-    if (
-      axiosError.response?.status === 409 &&
-      apiMessage === "Service cannot be deleted because it has sub-services"
-    ) {
-      requiresForceDelete.value = true;
-      return;
-    }
-
     deleteModalErrorMessage.value = apiMessage;
   } finally {
     isDeleting.value = false;
