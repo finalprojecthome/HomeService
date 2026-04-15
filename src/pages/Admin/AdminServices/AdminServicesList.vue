@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
@@ -55,7 +56,7 @@ const errorMessage = ref("");
 function showErrorToast(message: string) {
   showCustomToast({
     variant: "error",
-    title: "เกิดข้อผิดพลาด",
+    title: "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”",
     description: message,
   });
 }
@@ -108,7 +109,10 @@ async function fetchServices() {
     totalItems.value = response.totalItems;
     pageSize.value = response.size;
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถโหลดข้อมูลบริการได้");
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
     errorMessage.value = apiMessage;
     showErrorToast(apiMessage);
   } finally {
@@ -158,7 +162,7 @@ async function openDeleteModal(row: AdminServiceRow) {
   } catch (error) {
     const apiMessage = getApiErrorMessage(
       error,
-      "ไม่สามารถตรวจสอบข้อมูลก่อนลบบริการได้",
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¹ˆà¸­à¸™à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
     );
     deleteModalErrorMessage.value = apiMessage;
     selectedService.value = null;
@@ -194,7 +198,19 @@ async function deleteService() {
     closeDeleteModal();
     await fetchServices();
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบบริการได้");
+    const axiosError = error as AxiosError<{ message?: string }>;
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
+
+    if (
+      axiosError.response?.status === 409 &&
+      apiMessage === "Service cannot be deleted because it has sub-services"
+    ) {
+      requiresForceDelete.value = true;
+      return;
+    }
 
     deleteModalErrorMessage.value = apiMessage;
   } finally {
@@ -265,7 +281,10 @@ async function handleDrop(targetRowId: number) {
 
     await fetchServices();
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถจัดลำดับบริการได้");
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸ˆà¸±à¸”à¸¥à¸³à¸”à¸±à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
     errorMessage.value = apiMessage;
     showErrorToast(apiMessage);
     await fetchServices();
@@ -311,14 +330,14 @@ function goToNextPage() {
           <header
             class="flex items-center justify-between bg-white px-[35px] py-[17px]"
           >
-            <h1 class="style-headline-2 text-gray-950">บริการ</h1>
+            <h1 class="style-headline-2 text-gray-950">à¸šà¸£à¸´à¸à¸²à¸£</h1>
 
             <div class="flex items-center justify-end gap-[24px]">
               <div class="relative w-full md:w-[320px]">
                 <TextInput
                   v-model="searchKeyword"
                   name="admin-service-search"
-                  placeholder="ค้นหาบริการ..."
+                  placeholder="à¸„à¹‰à¸™à¸«à¸²à¸šà¸£à¸´à¸à¸²à¸£..."
                   class="pl-11"
                 />
                 <SearchIcon
@@ -331,7 +350,7 @@ function goToNextPage() {
                 class="min-w-[140px] justify-center"
                 @click="router.push('/admin/service/add')"
               >
-                <span>เพิ่มบริการ</span>
+                <span>à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸£à¸´à¸à¸²à¸£</span>
                 <span class="text-lg leading-none">+</span>
               </ActionButton>
             </div>
@@ -346,20 +365,22 @@ function goToNextPage() {
                   <thead>
                     <tr class="bg-gray-100 text-gray-700">
                       <th class="w-[44px] px-[8px] py-[8px] text-left"></th>
-                      <th class="w-[70px] px-[24px] py-[10px] text-left style-body-3">
-                        ลำดับ
+                      <th
+                        class="w-[70px] px-[24px] py-[10px] text-left style-body-3"
+                      >
+                        à¸¥à¸³à¸”à¸±à¸š
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
-                        ชื่อบริการ
+                        à¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
-                        หมวดหมู่
+                        à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
-                        สร้างเมื่อ
+                        à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸¡à¸·à¹ˆà¸­
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
-                        แก้ไขล่าสุด
+                        à¹à¸à¹‰à¹„à¸‚à¸¥à¹ˆà¸²à¸ªà¸¸à¸”
                       </th>
                       <th
                         class="w-[112px] px-[24px] py-[10px] text-center style-body-3"
@@ -393,9 +414,12 @@ function goToNextPage() {
                               ? 'cursor-not-allowed'
                               : 'cursor-grab active:cursor-grabbing'
                           "
-                          title="ลากเพื่อสลับลำดับ"
+                          title="à¸¥à¸²à¸à¹€à¸žà¸·à¹ˆà¸­à¸ªà¸¥à¸±à¸šà¸¥à¸³à¸”à¸±à¸š"
                         >
-                          <span class="grid grid-cols-2 gap-[3px]" aria-hidden="true">
+                          <span
+                            class="grid grid-cols-2 gap-[3px]"
+                            aria-hidden="true"
+                          >
                             <span
                               v-for="(_, dotIndex) in dragDots"
                               :key="dotIndex"
@@ -455,9 +479,14 @@ function goToNextPage() {
                             class="cursor-pointer text-blue-600 transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
                             aria-label="Edit service"
                             :disabled="isBusy"
-                            @click.stop="router.push(`/admin/service/${row.id}/edit`)"
+                            @click.stop="
+                              router.push(`/admin/service/${row.id}/edit`)
+                            "
                           >
-                            <component :is="Pencil" class="h-[18px] w-[18px]" />
+                            <component
+                              :is="Pencil"
+                              class="h-[18px] w-[18px]"
+                            />
                           </button>
                         </div>
                       </td>
@@ -468,7 +497,7 @@ function goToNextPage() {
                         colspan="7"
                         class="px-[24px] py-[32px] text-center style-body-2 text-gray-500"
                       >
-                        กำลังโหลดข้อมูล...
+                        à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥...
                       </td>
                     </tr>
 
@@ -477,7 +506,7 @@ function goToNextPage() {
                         colspan="7"
                         class="px-[24px] py-[32px] text-center style-body-2 text-gray-500"
                       >
-                        ไม่พบบริการ
+                        à¹„à¸¡à¹ˆà¸žà¸šà¸šà¸£à¸´à¸à¸²à¸£
                       </td>
                     </tr>
                   </tbody>
@@ -489,7 +518,7 @@ function goToNextPage() {
               class="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
             >
               <p class="style-body-2 text-gray-600">
-                แสดง {{ serviceRows.length }} จากทั้งหมด {{ totalItems }} รายการ
+                à¹à¸ªà¸”à¸‡ {{ serviceRows.length }} à¸ˆà¸²à¸à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” {{ totalItems }} à¸£à¸²à¸¢à¸à¸²à¸£
               </p>
 
               <div class="flex items-center gap-3">
@@ -499,11 +528,11 @@ function goToNextPage() {
                   :disabled="currentPage === 0 || isLoading"
                   @click="goToPreviousPage"
                 >
-                  ก่อนหน้า
+                  à¸à¹ˆà¸­à¸™à¸«à¸™à¹‰à¸²
                 </ActionButton>
 
                 <span class="style-body-2 text-gray-700">
-                  หน้า {{ currentPage + 1 }} / {{ totalPages || 1 }}
+                  à¸«à¸™à¹‰à¸² {{ currentPage + 1 }} / {{ totalPages || 1 }}
                 </span>
 
                 <ActionButton
@@ -512,7 +541,7 @@ function goToNextPage() {
                   :disabled="currentPage + 1 >= totalPages || isLoading"
                   @click="goToNextPage"
                 >
-                  ถัดไป
+                  à¸–à¸±à¸”à¹„à¸›
                 </ActionButton>
               </div>
             </div>
@@ -524,15 +553,15 @@ function goToNextPage() {
     <AdminConfirmDeleteModal
       v-model="isDeleteModalOpen"
       :item-name="selectedService?.name ?? ''"
-      title="ยืนยันการลบบริการ"
-      simple-message-template="คุณต้องการลบรายการ {itemName}
-ใช่หรือไม่"
-      force-message-template="บริการ {itemName} มีรายการบริการย่อยอยู่ในระบบ การลบครั้งนี้จะลบรายการบริการย่อยทั้งหมดของบริการนี้ด้วย
-เพื่อยืนยัน กรุณาพิมพ์ชื่อบริการ {itemName} ลงด้านล่าง"
-      confirm-text="ลบรายการ"
-      force-confirm-text="ลบบริการและรายการย่อย"
-      typed-placeholder-template="พิมพ์ชื่อบริการ {itemName}"
-      typed-mismatch-message="ชื่อบริการไม่ถูกต้อง"
+      title="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸à¸²à¸£à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£"
+      simple-message-template="à¸„à¸¸à¸“à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£ {itemName}
+à¹ƒà¸Šà¹ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ"
+      force-message-template="à¸šà¸£à¸´à¸à¸²à¸£ {itemName} à¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸£à¸°à¸šà¸š à¸à¸²à¸£à¸¥à¸šà¸„à¸£à¸±à¹‰à¸‡à¸™à¸µà¹‰à¸ˆà¸°à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸‚à¸­à¸‡à¸šà¸£à¸´à¸à¸²à¸£à¸™à¸µà¹‰à¸”à¹‰à¸§à¸¢
+à¹€à¸žà¸·à¹ˆà¸­à¸¢à¸·à¸™à¸¢à¸±à¸™ à¸à¸£à¸¸à¸“à¸²à¸žà¸´à¸¡à¸žà¹Œà¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£ {itemName} à¸¥à¸‡à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡"
+      confirm-text="à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£"
+      force-confirm-text="à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹à¸¥à¸°à¸£à¸²à¸¢à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢"
+      typed-placeholder-template="à¸žà¸´à¸¡à¸žà¹Œà¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£ {itemName}"
+      typed-mismatch-message="à¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"
       :requires-typed-confirmation="requiresForceDelete"
       :is-submitting="isDeleting"
       :error-message="deleteModalErrorMessage"

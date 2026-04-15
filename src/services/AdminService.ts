@@ -63,7 +63,6 @@ export type AdminServiceDeleteImpact = {
   serviceId: number;
   requiresForceDelete: boolean;
 };
-
 export async function getAdminServices(params: GetAdminServicesParams = {}) {
   const { data } = await apiAdmin.get<AdminServicePageResponse>("/api/admin/services", {
     params: {
@@ -100,7 +99,6 @@ export async function getAdminServiceDeleteImpact(serviceId: number) {
 
   return data;
 }
-
 export async function updateAdminService(
   serviceId: number,
   payload: AdminServicePayload,

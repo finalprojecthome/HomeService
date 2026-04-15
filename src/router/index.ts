@@ -180,7 +180,7 @@ const router = createRouter({
       path: "/booking",
       name: "booking",
       component: BookingPage,
-      meta: {requiresAuth: true}
+      meta: { requiresAuth: true },
     },
     {
       path: "/admin/service",

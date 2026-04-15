@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DropdownOption } from "../../../components/ui/Dropdown.vue";
+import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
@@ -66,13 +67,15 @@ const requiresForceDelete = ref(false);
 const deleteModalErrorMessage = ref("");
 const isCancelConfirmModalOpen = ref(false);
 const isRemoveSubServiceModalOpen = ref(false);
-const pendingRemoveSubService = ref<AdminServiceFormSubServiceDraft | null>(null);
+const pendingRemoveSubService = ref<AdminServiceFormSubServiceDraft | null>(
+  null,
+);
 const initialSnapshot = ref("");
 
 function showErrorToast(message: string) {
   showCustomToast({
     variant: "error",
-    title: "เกิดข้อผิดพลาด",
+    title: "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”",
     description: message,
   });
 }
@@ -95,11 +98,15 @@ const canSubmit = computed(
     serializeFormState() !== initialSnapshot.value,
 );
 
-watch([serviceName, categoryId, subServices], () => {
-  if (errorMessage.value) {
-    errorMessage.value = "";
-  }
-}, { deep: true });
+watch(
+  [serviceName, categoryId, subServices],
+  () => {
+    if (errorMessage.value) {
+      errorMessage.value = "";
+    }
+  },
+  { deep: true },
+);
 
 onMounted(() => {
   void fetchPageData();
@@ -152,7 +159,7 @@ function goToServiceList() {
 
 async function fetchPageData() {
   if (serviceId.value === null) {
-    errorMessage.value = "ไม่พบบริการที่ต้องการแก้ไข";
+    errorMessage.value = "à¹„à¸¡à¹ˆà¸žà¸šà¸šà¸£à¸´à¸à¸²à¸£à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚";
     showErrorToast(errorMessage.value);
     return;
   }
@@ -187,7 +194,10 @@ async function fetchPageData() {
     updatedAt.value = formatDate(service.updatedAt);
     initialSnapshot.value = serializeFormState();
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถโหลดข้อมูลบริการได้");
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
     errorMessage.value = apiMessage;
     showErrorToast(apiMessage);
   } finally {
@@ -242,7 +252,7 @@ async function confirmRemoveSubService() {
     } catch (error) {
       const apiMessage = getApiErrorMessage(
         error,
-        "ไม่สามารถลบรายการบริการย่อยได้",
+        "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¹„à¸”à¹‰",
       );
       showErrorToast(apiMessage);
       closeRemoveSubServiceModal();
@@ -272,7 +282,7 @@ async function openDeleteModal() {
   } catch (error) {
     const apiMessage = getApiErrorMessage(
       error,
-      "ไม่สามารถตรวจสอบข้อมูลก่อนลบบริการได้",
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¹ˆà¸­à¸™à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
     );
     deleteModalErrorMessage.value = apiMessage;
     showErrorToast(apiMessage);
@@ -294,17 +304,18 @@ function validateForm() {
   let isValid = true;
 
   if (!serviceName.value.trim()) {
-    nextErrors.serviceName = "กรุณากรอกชื่อบริการ";
+    nextErrors.serviceName = "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£";
     isValid = false;
   }
 
   if (categoryId.value === null) {
-    nextErrors.categoryId = "กรุณาเลือกหมวดหมู่";
+    nextErrors.categoryId = "à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ";
     isValid = false;
   }
 
   if (subServices.value.length === 0) {
-    errorMessage.value = "กรุณาเพิ่มรายการบริการย่อยอย่างน้อย 1 รายการ";
+    errorMessage.value =
+      "à¸à¸£à¸¸à¸“à¸²à¹€à¸žà¸´à¹ˆà¸¡à¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 1 à¸£à¸²à¸¢à¸à¸²à¸£";
     showErrorToast(errorMessage.value);
     isValid = false;
   }
@@ -314,20 +325,22 @@ function validateForm() {
     const parsedPrice = Number(row.pricePerUnit);
 
     if (!row.name.trim()) {
-      rowErrors.name = "กรุณากรอกชื่อรายการ";
+      rowErrors.name = "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸Šà¸·à¹ˆà¸­à¸£à¸²à¸¢à¸à¸²à¸£";
       isValid = false;
     }
 
     if (!row.unit.trim()) {
-      rowErrors.unit = "กรุณากรอกหน่วยบริการ";
+      rowErrors.unit = "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸«à¸™à¹ˆà¸§à¸¢à¸šà¸£à¸´à¸à¸²à¸£";
       isValid = false;
     }
 
     if (!row.pricePerUnit.trim()) {
-      rowErrors.pricePerUnit = "กรุณากรอกค่าบริการ";
+      rowErrors.pricePerUnit =
+        "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸„à¹ˆà¸²à¸šà¸£à¸´à¸à¸²à¸£";
       isValid = false;
     } else if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      rowErrors.pricePerUnit = "กรุณากรอกค่าบริการให้ถูกต้อง";
+      rowErrors.pricePerUnit =
+        "à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸„à¹ˆà¸²à¸šà¸£à¸´à¸à¸²à¸£à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡";
       isValid = false;
     }
 
@@ -376,13 +389,16 @@ async function handleSubmit() {
     await updateAdminService(serviceId.value, buildPayload(imageUrl));
     goToServiceList();
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถบันทึกข้อมูลบริการได้");
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸šà¸±à¸™à¸—à¸¶à¸à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
 
     if (apiMessage === "Service name already exists in this category") {
       showCustomToast({
         variant: "error",
-        title: "เกิดข้อผิดพลาด",
-        description: `ชื่อบริการ '${serviceName.value.trim()}' ถูกใช้งานในหมวดหมู่นี้แล้ว`,
+        title: "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”",
+        description: `à¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£ '${serviceName.value.trim()}' à¸–à¸¹à¸à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¹ƒà¸™à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆà¸™à¸µà¹‰à¹à¸¥à¹‰à¸§`,
       });
       return;
     }
@@ -408,7 +424,20 @@ async function deleteService() {
     closeDeleteModal();
     goToServiceList();
   } catch (error) {
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบบริการได้");
+    const axiosError = error as AxiosError<{ message?: string }>;
+    const apiMessage = getApiErrorMessage(
+      error,
+      "à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹„à¸”à¹‰",
+    );
+
+    if (
+      axiosError.response?.status === 409 &&
+      apiMessage === "Service cannot be deleted because it has sub-services"
+    ) {
+      requiresForceDelete.value = true;
+      return;
+    }
+
     deleteModalErrorMessage.value = apiMessage;
   } finally {
     isDeleting.value = false;
@@ -440,9 +469,9 @@ async function deleteService() {
               </button>
 
               <div class="min-w-0">
-                <p class="style-body-4 text-gray-500">บริการ</p>
+                <p class="style-body-4 text-gray-500">à¸šà¸£à¸´à¸à¸²à¸£</p>
                 <h1 class="truncate style-headline-3 text-gray-950">
-                  {{ initialServiceName || "แก้ไขบริการ" }}
+                  {{ initialServiceName || "à¹à¸à¹‰à¹„à¸‚à¸šà¸£à¸´à¸à¸²à¸£" }}
                 </h1>
               </div>
             </div>
@@ -454,7 +483,7 @@ async function deleteService() {
                 :disabled="isBusy"
                 @click="openCancelFlow"
               >
-                ยกเลิก
+                à¸¢à¸à¹€à¸¥à¸´à¸
               </ActionButton>
 
               <ActionButton
@@ -462,12 +491,15 @@ async function deleteService() {
                 :disabled="!canSubmit"
                 @click="handleSubmit"
               >
-                ยืนยัน
+                à¸¢à¸·à¸™à¸¢à¸±à¸™
               </ActionButton>
             </div>
           </header>
 
-          <form class="flex-1 px-[35px] py-[35px]" @submit.prevent="handleSubmit">
+          <form
+            class="flex-1 px-[35px] py-[35px]"
+            @submit.prevent="handleSubmit"
+          >
             <AdminServiceForm
               :service-name="serviceName"
               :category-id="categoryId"
@@ -497,7 +529,7 @@ async function deleteService() {
                 @click="openDeleteModal"
               >
                 <component :is="Bin" class="h-[24px] w-[24px]" />
-                <span>ลบบริการ</span>
+                <span>à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£</span>
               </button>
             </div>
           </form>
@@ -508,15 +540,15 @@ async function deleteService() {
     <AdminConfirmDeleteModal
       v-model="isDeleteModalOpen"
       :item-name="initialServiceName || serviceName"
-      title="ยืนยันการลบบริการ"
-      simple-message-template="คุณต้องการลบรายการ {itemName}
-ใช่หรือไม่"
-      force-message-template="บริการ {itemName} มีรายการบริการย่อยอยู่ในระบบ การลบครั้งนี้จะลบรายการบริการย่อยทั้งหมดของบริการนี้ด้วย
-เพื่อยืนยัน กรุณาพิมพ์ชื่อบริการ {itemName} ลงด้านล่าง"
-      confirm-text="ลบรายการ"
-      force-confirm-text="ลบบริการและรายการย่อย"
-      typed-placeholder-template="พิมพ์ชื่อบริการ {itemName}"
-      typed-mismatch-message="ชื่อบริการไม่ถูกต้อง"
+      title="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸à¸²à¸£à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£"
+      simple-message-template="à¸„à¸¸à¸“à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£ {itemName}
+à¹ƒà¸Šà¹ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ"
+      force-message-template="à¸šà¸£à¸´à¸à¸²à¸£ {itemName} à¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸£à¸°à¸šà¸š à¸à¸²à¸£à¸¥à¸šà¸„à¸£à¸±à¹‰à¸‡à¸™à¸µà¹‰à¸ˆà¸°à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£à¸šà¸£à¸´à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸‚à¸­à¸‡à¸šà¸£à¸´à¸à¸²à¸£à¸™à¸µà¹‰à¸”à¹‰à¸§à¸¢
+à¹€à¸žà¸·à¹ˆà¸­à¸¢à¸·à¸™à¸¢à¸±à¸™ à¸à¸£à¸¸à¸“à¸²à¸žà¸´à¸¡à¸žà¹Œà¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£ {itemName} à¸¥à¸‡à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡"
+      confirm-text="à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£"
+      force-confirm-text="à¸¥à¸šà¸šà¸£à¸´à¸à¸²à¸£à¹à¸¥à¸°à¸£à¸²à¸¢à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢"
+      typed-placeholder-template="à¸žà¸´à¸¡à¸žà¹Œà¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£ {itemName}"
+      typed-mismatch-message="à¸Šà¸·à¹ˆà¸­à¸šà¸£à¸´à¸à¸²à¸£à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡"
       :requires-typed-confirmation="requiresForceDelete"
       :is-submitting="isDeleting"
       :error-message="deleteModalErrorMessage"
@@ -526,20 +558,20 @@ async function deleteService() {
 
     <Modal
       v-model="isRemoveSubServiceModalOpen"
-      title="ยืนยันการลบรายการย่อย"
-      :message="`คุณต้องการลบรายการย่อย \`${pendingRemoveSubService?.name || '-'}\` ใช่หรือไม่`"
-      confirm-text="ลบรายการ"
-      cancel-text="ยกเลิก"
+      title="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸à¸²à¸£à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢"
+      :message="`à¸„à¸¸à¸“à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£à¸¢à¹ˆà¸­à¸¢ \`${pendingRemoveSubService?.name || '-'}\` à¹ƒà¸Šà¹ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ`"
+      confirm-text="à¸¥à¸šà¸£à¸²à¸¢à¸à¸²à¸£"
+      cancel-text="à¸¢à¸à¹€à¸¥à¸´à¸"
       @confirm="confirmRemoveSubService"
       @cancel="closeRemoveSubServiceModal"
     />
 
     <Modal
       v-model="isCancelConfirmModalOpen"
-      title="ยืนยันการยกเลิก"
-      message="มีข้อมูลบริการอยู่ในฟอร์ม ต้องการยกเลิกและกลับไปหน้ารายการหรือไม่"
-      confirm-text="ยืนยันยกเลิก"
-      cancel-text="อยู่ต่อ"
+      title="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸à¸²à¸£à¸¢à¸à¹€à¸¥à¸´à¸"
+      message="à¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸£à¸´à¸à¸²à¸£à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸Ÿà¸­à¸£à¹Œà¸¡ à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸¢à¸à¹€à¸¥à¸´à¸à¹à¸¥à¸°à¸à¸¥à¸±à¸šà¹„à¸›à¸«à¸™à¹‰à¸²à¸£à¸²à¸¢à¸à¸²à¸£à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ"
+      confirm-text="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸¢à¸à¹€à¸¥à¸´à¸"
+      cancel-text="à¸­à¸¢à¸¹à¹ˆà¸•à¹ˆà¸­"
       @confirm="goToServiceList"
       @cancel="closeCancelModal"
     />
