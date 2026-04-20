@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useScrollState } from "../../composables/useScrollState";
 import cn from "../../utils/cn";
-import { History, List, Logout, UserIcon } from "../icons";
+import { History, List, Logout, UserIcon, WrenchIcon } from "../icons";
 import { useAuthStore } from "../../stores";
 import Avatar from "../ui/Avatar.vue";
 import NavigationButton from "../ui/NavigationButton.vue";
@@ -54,17 +54,34 @@ function handleUserMenuOutside(e: MouseEvent) {
 
 function goProfile() {
   closeUserMenu();
-  router.push({ name: "profile" });
+  if (user.value?.role === 'technician') {
+    router.push('/technician/settings');
+  } else {
+    router.push({ name: "profile" });
+  }
 }
 
 function goRepairOrders() {
   closeUserMenu();
-  router.push({ name: "repairOrders" });
+  if (user.value?.role === 'technician') {
+    router.push('/technician/pending');
+  } else {
+    router.push({ name: "repairOrders" });
+  }
 }
 
 function goRepairHistory() {
   closeUserMenu();
-  router.push({ name: "repairHistory" });
+  if (user.value?.role === 'technician') {
+    router.push('/technician/history');
+  } else {
+    router.push({ name: "repairHistory" });
+  }
+}
+
+function goTechnicianDashboard() {
+  closeUserMenu();
+  router.push("/technician");
 }
 
 function goLogout() {
@@ -171,6 +188,16 @@ onBeforeUnmount(() =>
             >
               <UserIcon :size="20" class="shrink-0 text-gray-600" />
               ข้อมูลผู้ใช้งาน
+            </button>
+            <button
+              v-if="user?.role === 'technician'"
+              type="button"
+              role="menuitem"
+              class="flex w-full items-center gap-3 px-4 py-3 text-left style-body-3 text-gray-700 transition-colors hover:bg-gray-100"
+              @click="goTechnicianDashboard"
+            >
+              <WrenchIcon :size="20" class="shrink-0 text-gray-600" />
+              แดชบอร์ดช่าง (Technician)
             </button>
             <button
               type="button"

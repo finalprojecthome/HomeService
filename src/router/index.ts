@@ -14,6 +14,7 @@ import AdminLogin from "../pages/Admin/Login.vue";
 import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 import { useAuthStore } from "../stores";
 import { showCustomToast } from "../utils/toast";
+import TechnicianLayout from '../layouts/TechnicianLayout.vue'
 
 const BookingPage = () => import("../pages/BookingPage.vue");
 const Login = () => import("../pages/Login.vue");
@@ -52,7 +53,7 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลผู้ใช้งาน",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -62,20 +63,8 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลที่อยู่",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
-      children: [
-        {
-          path: "add",
-          name: "addAddress",
-          component: AccountStubPage,
-        },
-        {
-          path: "edit/:id",
-          name: "editAddress",
-          component: AccountStubPage,
-        },
-      ],
     },
     {
       path: "/repair-orders",
@@ -84,7 +73,7 @@ const router = createRouter({
       meta: {
         title: "รายการคำสั่งซ่อม",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -94,7 +83,7 @@ const router = createRouter({
       meta: {
         title: "ประวัติการซ่อม",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -104,7 +93,7 @@ const router = createRouter({
       meta: {
         title: "เปลี่ยนรหัสผ่าน",
         requiresAuth: true,
-        roles: ["customer"],
+        roles: ["user", "customer"],
       },
     },
     {
@@ -115,6 +104,47 @@ const router = createRouter({
         title: "เข้าสู่ระบบ",
         requiresGuest: true,
       },
+    },
+    {
+      path: '/technician',
+      component: TechnicianLayout,
+      redirect: '/technician/requests',
+      meta: {
+        requiresAuth: true,
+        roles: ['technician']
+      },
+      children: [
+        {
+          path: 'requests',
+          name: 'technician-requests',
+          component: () => import('../pages/technician/ServiceRequests.vue')
+        },
+        {
+          path: 'pending',
+          name: 'technician-pending',
+          component: () => import('../pages/technician/PendingTasks.vue')
+        },
+        {
+          path: 'pending/:id',
+          name: 'technician-pending-details',
+          component: () => import('../pages/technician/PendingTaskDetails.vue')
+        },
+        {
+          path: 'history',
+          name: 'technician-history',
+          component: () => import('../pages/technician/HistoryTasks.vue')
+        },
+        {
+          path: 'history/:id',
+          name: 'technician-history-details',
+          component: () => import('../pages/technician/HistoryTaskDetails.vue')
+        },
+        {
+          path: 'settings',
+          name: 'technician-settings',
+          component: () => import('../pages/technician/AccountSettings.vue')
+        }
+      ]
     },
     {
       path: "/login",
@@ -180,87 +210,78 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, _from) => {
+router.beforeEach(async (to, _from, next) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
 
-
-  if (requiresAuth) {
-    const token = localStorage.getItem("accessToken");
-
-
-    if (!token) {
-      return {
-        name: "login",
-        query: { redirect: to.fullPath },
-      };
-    }
-  }
-
+  // 1. Handle Admin Authentication
   if (requiresAdmin) {
     await initializeAdminAuthSession();
     const token = await getAdminAccessToken();
 
     if (!token) {
-      return {
+      return next({
         name: "admin-login",
         query: { redirect: to.fullPath },
-      };
+      });
     }
 
     try {
       const admin = await fetchAdminMe();
-
       if (admin.role !== "admin") {
         clearAdminAccessToken();
-        return {
+        return next({
           name: "admin-login",
           query: { redirect: to.fullPath },
-        };
+        });
       }
-
-      return true;
+      return next();
     } catch {
       clearAdminAccessToken();
-      return {
+      return next({
         name: "admin-login",
         query: { redirect: to.fullPath },
-      };
+      });
     }
-  } else {
-    const authStore = useAuthStore();
-    await authStore.initializeAuth();
-
-    const isAuthenticated = Boolean(authStore.user);
-    const role = authStore.user?.role;
-
-    // Check if the route requires authentication
-    if (to.meta.requiresAuth && !isAuthenticated) {
-      return {
-        name: "login",
-        query: { redirect: to.fullPath },
-      };
-    }
-
-    if (to.meta.requiresGuest && isAuthenticated) {
-      return { name: "home" };
-    }
-
-    // Check if the route has role restrictions
-    if (to.meta.requiresAuth && to.meta.roles && role) {
-      const roles = to.meta.roles as string[];
-      if (!roles.includes(role)) {
-        showCustomToast({
-          variant: "error",
-          title: "ไม่สามารถเข้าถึงหน้านี้",
-          description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
-        });
-        return { name: "home" };
-      }
-    }
-
-    return true;
   }
+
+  // 2. Handle User & Technician Authentication
+  const authStore = useAuthStore();
+  await authStore.initializeAuth();
+
+  const isAuthenticated = Boolean(authStore.user);
+  const role = authStore.user?.role;
+
+  // Guest checking
+  if (to.meta.requiresGuest && isAuthenticated) {
+    return next({ name: "home" });
+  }
+
+  // Auth checking
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next({
+      name: "login",
+      query: { redirect: to.fullPath },
+    });
+  }
+
+  // Role checking
+  if (to.meta.requiresAuth && to.meta.roles) {
+    const roles = to.meta.roles as string[];
+    // Cast to string for broad comparison
+    const userRole = role as string;
+    const currentRole = userRole === "customer" ? "user" : userRole;
+    
+    if (userRole && !roles.includes(userRole) && !roles.includes(currentRole)) {
+      showCustomToast({
+        variant: "error",
+        title: "ไม่สามารถเข้าถึงหน้านี้",
+        description: "คุณไม่มีสิทธิ์ที่จะเข้าถึงหน้านี้",
+      });
+      return next({ name: "home" });
+    }
+  }
+
+  next();
 });
 
 export default router;
