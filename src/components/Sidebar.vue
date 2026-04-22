@@ -2,6 +2,7 @@
 import NavLinks, { type NavLink } from './NavLinks.vue';
 import NavLinkItem from './NavLinkItem.vue';
 import houseIcon from '../assets/icon/house.png';
+import { RouterLink } from 'vue-router';
 
 interface Props {
   logoText?: string;
@@ -32,14 +33,14 @@ const handleBottomLinkClick = () => {
 </script>
 
 <template>
-  <aside :class="['flex flex-col gap-[16px] h-full max-w-[240px] max-h-[1024px] bg-blue-950 overflow-hidden', width]">
+  <aside :class="['flex flex-col gap-[16px] h-full min-h-screen max-w-[240px] bg-blue-950 overflow-hidden', width]">
     <!-- Logo Section -->
     <div class="px-[24px] pt-[24px] pb-[28px]">
       <slot name="logo">
-        <div class="flex items-center justify-center gap-[10px] px-[12px] py-[8px] bg-blue-100 rounded-xl text-blue-600">
+        <RouterLink to="/" class="flex items-center justify-center gap-[10px] px-[12px] py-[8px] bg-blue-100 rounded-xl text-blue-600 hover:bg-blue-200 transition-colors cursor-pointer">
           <img :src="houseIcon" alt="HomeServices Logo" class="w-7 h-7 shrink-0 object-contain" />
           <span class="style-headline-2">{{ logoText }}</span>
-        </div>
+        </RouterLink>
       </slot>
     </div>
 
