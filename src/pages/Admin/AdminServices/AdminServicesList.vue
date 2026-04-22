@@ -1,25 +1,32 @@
 <script setup lang="ts">
-import type { AxiosError } from "axios";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import AdminSidebar from "../../../components/admin/AdminSidebar.vue";
 import AdminConfirmDeleteModal from "../../../components/admin/AdminConfirmDeleteModal.vue";
+import AdminSidebar from "../../../components/admin/AdminSidebar.vue";
+import { Bin, Pencil, SearchIcon } from "../../../components/icons";
 import ActionButton from "../../../components/ui/ActionButton.vue";
 import TextInput from "../../../components/ui/TextInput.vue";
 import {
-  deleteAdminCategory,
-  getAdminCategories,
-  reorderAdminCategories,
-  type AdminCategoryItem,
-} from "../../../services/AdminCategory";
-import { Bin, Pencil, SearchIcon } from "../../../components/icons";
+  deleteAdminService,
+  getAdminServiceDeleteImpact,
+  getAdminServices,
+  reorderAdminServices,
+  type AdminServiceItem,
+} from "../../../services/AdminService";
+import {
+  createAdminCategoryNameMap,
+  getAllAdminCategories,
+} from "../../../services/adminCategoryOptions";
 import { debounce } from "../../../utils/debounce";
 import { formatDate } from "../../../utils/formatDateAdmin";
 import { getApiErrorMessage } from "../../../utils/getApiErrorMessage";
+import { showCustomToast } from "../../../utils/toast";
 
-type AdminCategoryRow = {
+type AdminServiceRow = {
   id: number;
   name: string;
+  categoryId: number;
+  categoryName: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -31,22 +38,35 @@ const debouncedSearchKeyword = ref("");
 const isDeleteModalOpen = ref(false);
 const requiresForceDelete = ref(false);
 const deleteModalErrorMessage = ref("");
-const selectedCategory = ref<AdminCategoryRow | null>(null);
+const selectedService = ref<AdminServiceRow | null>(null);
 const draggedRowId = ref<number | null>(null);
 const dropTargetRowId = ref<number | null>(null);
-const categoryRows = ref<AdminCategoryRow[]>([]);
+const serviceRows = ref<AdminServiceRow[]>([]);
 const currentPage = ref(0);
 const totalPages = ref(0);
 const totalItems = ref(0);
 const pageSize = ref(10);
 const isLoading = ref(false);
 const isDeleting = ref(false);
+const isDeleteImpactLoading = ref(false);
 const isReordering = ref(false);
 const errorMessage = ref("");
 
+function showErrorToast(message: string) {
+  showCustomToast({
+    variant: "error",
+    title: "เกิดข้อผิดพลาด",
+    description: message,
+  });
+}
+
 const dragDots = Array.from({ length: 6 });
 const isBusy = computed(
-  () => isLoading.value || isDeleting.value || isReordering.value,
+  () =>
+    isLoading.value ||
+    isDeleting.value ||
+    isDeleteImpactLoading.value ||
+    isReordering.value,
 );
 
 watch(
@@ -58,51 +78,105 @@ watch(
 
 watch(debouncedSearchKeyword, () => {
   currentPage.value = 0;
-  void fetchCategories();
+  void fetchServices();
 });
 
 onMounted(() => {
-  void fetchCategories();
+  void fetchServices();
 });
 
-async function fetchCategories() {
+async function fetchServices() {
   isLoading.value = true;
   errorMessage.value = "";
 
   try {
-    const response = await getAdminCategories({
-      search: debouncedSearchKeyword.value,
-      page: currentPage.value,
-    });
+    const [response, categories] = await Promise.all([
+      getAdminServices({
+        search: debouncedSearchKeyword.value,
+        page: currentPage.value,
+      }),
+      getAllAdminCategories(),
+    ]);
 
-    categoryRows.value = response.items.map(mapCategoryRow);
+    const categoryNameMap = createAdminCategoryNameMap(categories);
+
+    serviceRows.value = response.items.map((service) =>
+      mapServiceRow(service, categoryNameMap),
+    );
     currentPage.value = response.page;
     totalPages.value = response.totalPages;
     totalItems.value = response.totalItems;
     pageSize.value = response.size;
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถโหลดหมวดหมู่ได้");
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถโหลดข้อมูลบริการได้");
+    errorMessage.value = apiMessage;
+    showErrorToast(apiMessage);
   } finally {
     isLoading.value = false;
   }
 }
 
-function openDeleteModal(row: AdminCategoryRow) {
-  selectedCategory.value = row;
+function mapServiceRow(
+  service: AdminServiceItem,
+  categoryNameMap: Map<number, string>,
+): AdminServiceRow {
+  return {
+    id: service.serviceId,
+    name: service.name,
+    categoryId: service.categoryId,
+    categoryName: categoryNameMap.get(service.categoryId) || "-",
+    createdAt: formatDate(service.createdAt),
+    updatedAt: formatDate(service.updatedAt),
+  };
+}
+
+function getCategoryBadgeClass(categoryId: number) {
+  const palette = [
+    "bg-blue-100 text-blue-600",
+    "bg-purple-100 text-purple-600",
+    "bg-cyan-100 text-cyan-700",
+    "bg-orange-100 text-orange-600",
+  ];
+
+  return palette[Math.abs(categoryId) % palette.length];
+}
+
+async function openDeleteModal(row: AdminServiceRow) {
+  if (isBusy.value) {
+    return;
+  }
+
+  isDeleteImpactLoading.value = true;
+  selectedService.value = row;
   requiresForceDelete.value = false;
   deleteModalErrorMessage.value = "";
-  isDeleteModalOpen.value = true;
+
+  try {
+    const impact = await getAdminServiceDeleteImpact(row.id);
+    requiresForceDelete.value = impact.requiresForceDelete;
+    isDeleteModalOpen.value = true;
+  } catch (error) {
+    const apiMessage = getApiErrorMessage(
+      error,
+      "ไม่สามารถตรวจสอบข้อมูลก่อนลบบริการได้",
+    );
+    deleteModalErrorMessage.value = apiMessage;
+    selectedService.value = null;
+    showErrorToast(apiMessage);
+  } finally {
+    isDeleteImpactLoading.value = false;
+  }
 }
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false;
-  selectedCategory.value = null;
+  selectedService.value = null;
   requiresForceDelete.value = false;
   deleteModalErrorMessage.value = "";
 }
 
-async function deleteCategory() {
-  if (!selectedCategory.value) {
+async function deleteService() {
+  if (!selectedService.value) {
     return;
   }
 
@@ -111,46 +185,34 @@ async function deleteCategory() {
   deleteModalErrorMessage.value = "";
 
   try {
-    await deleteAdminCategory(
-      selectedCategory.value.id,
-      requiresForceDelete.value,
-    );
+    await deleteAdminService(selectedService.value.id, requiresForceDelete.value);
 
-    if (categoryRows.value.length === 1 && currentPage.value > 0) {
+    if (serviceRows.value.length === 1 && currentPage.value > 0) {
       currentPage.value -= 1;
     }
 
     closeDeleteModal();
-    await fetchCategories();
+    await fetchServices();
   } catch (error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบหมวดหมู่ได้");
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถลบบริการได้");
 
-    if (
-      axiosError.response?.status === 409 &&
-      apiMessage === "Category cannot be deleted because it is in use"
-    ) {
-      requiresForceDelete.value = true;
-      return;
-    }
-
-    errorMessage.value = apiMessage;
+    deleteModalErrorMessage.value = apiMessage;
   } finally {
     isDeleting.value = false;
   }
 }
 
 function getDisplayOrder(rowId: number) {
-  const index = categoryRows.value.findIndex((row) => row.id === rowId);
+  const index = serviceRows.value.findIndex((row) => row.id === rowId);
   return currentPage.value * pageSize.value + index + 1;
 }
 
-function goToCategoryDetail(rowId: number) {
+function goToServiceDetail(rowId: number) {
   if (isBusy.value) {
     return;
   }
 
-  router.push(`/admin/category/${rowId}`);
+  router.push(`/admin/service/${rowId}`);
 }
 
 function handleDragStart(rowId: number) {
@@ -173,11 +235,11 @@ async function handleDrop(targetRowId: number) {
   const sourceRowId = draggedRowId.value;
 
   if (sourceRowId === null || sourceRowId === targetRowId) {
-    dropTargetRowId.value = null;
+    handleDragEnd();
     return;
   }
 
-  const nextRows = [...categoryRows.value];
+  const nextRows = [...serviceRows.value];
   const sourceIndex = nextRows.findIndex((row) => row.id === sourceRowId);
   const targetIndex = nextRows.findIndex((row) => row.id === targetRowId);
 
@@ -188,23 +250,25 @@ async function handleDrop(targetRowId: number) {
 
   const [movedRow] = nextRows.splice(sourceIndex, 1);
   nextRows.splice(targetIndex, 0, movedRow);
-  categoryRows.value = nextRows;
+  serviceRows.value = nextRows;
 
   try {
     isReordering.value = true;
     errorMessage.value = "";
 
-    await reorderAdminCategories({
+    await reorderAdminServices({
       scope: "page",
-      categoryIds: nextRows.map((row) => row.id),
+      serviceIds: nextRows.map((row) => row.id),
       search: debouncedSearchKeyword.value.trim() || undefined,
       page: currentPage.value,
     });
 
-    await fetchCategories();
+    await fetchServices();
   } catch (error) {
-    errorMessage.value = getApiErrorMessage(error, "ไม่สามารถจัดลำดับหมวดหมู่ได้");
-    await fetchCategories();
+    const apiMessage = getApiErrorMessage(error, "ไม่สามารถจัดลำดับบริการได้");
+    errorMessage.value = apiMessage;
+    showErrorToast(apiMessage);
+    await fetchServices();
   } finally {
     isReordering.value = false;
     handleDragEnd();
@@ -222,7 +286,7 @@ function goToPreviousPage() {
   }
 
   currentPage.value -= 1;
-  void fetchCategories();
+  void fetchServices();
 }
 
 function goToNextPage() {
@@ -231,16 +295,7 @@ function goToNextPage() {
   }
 
   currentPage.value += 1;
-  void fetchCategories();
-}
-
-function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
-  return {
-    id: category.categoryId,
-    name: category.name,
-    createdAt: formatDate(category.createdAt),
-    updatedAt: formatDate(category.updatedAt),
-  };
+  void fetchServices();
 }
 </script>
 
@@ -256,14 +311,14 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
           <header
             class="flex items-center justify-between bg-white px-[35px] py-[17px]"
           >
-            <h1 class="style-headline-2 text-gray-950">หมวดหมู่</h1>
+            <h1 class="style-headline-2 text-gray-950">บริการ</h1>
 
             <div class="flex items-center justify-end gap-[24px]">
               <div class="relative w-full md:w-[320px]">
                 <TextInput
                   v-model="searchKeyword"
-                  name="admin-category-search"
-                  placeholder="ค้นหาหมวดหมู่..."
+                  name="admin-service-search"
+                  placeholder="ค้นหาบริการ..."
                   class="pl-11"
                 />
                 <SearchIcon
@@ -273,20 +328,16 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
               </div>
 
               <ActionButton
-                class="min-w-[165px] justify-center"
-                @click="router.push('/admin/category/add')"
+                class="min-w-[140px] justify-center"
+                @click="router.push('/admin/service/add')"
               >
-                <span>เพิ่มหมวดหมู่</span>
+                <span>เพิ่มบริการ</span>
                 <span class="text-lg leading-none">+</span>
               </ActionButton>
             </div>
           </header>
 
           <div class="flex-1 px-[35px] py-[35px]">
-            <p v-if="errorMessage" class="mb-4 style-body-2 text-red">
-              {{ errorMessage }}
-            </p>
-
             <div
               class="overflow-hidden rounded-[8px] border border-gray-200 bg-white style-shadow"
             >
@@ -295,13 +346,14 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                   <thead>
                     <tr class="bg-gray-100 text-gray-700">
                       <th class="w-[44px] px-[8px] py-[8px] text-left"></th>
-                      <th
-                        class="w-[70px] px-[24px] py-[10px] text-left style-body-3"
-                      >
+                      <th class="w-[70px] px-[24px] py-[10px] text-left style-body-3">
                         ลำดับ
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
-                        ชื่อหมวดหมู่
+                        ชื่อบริการ
+                      </th>
+                      <th class="px-[24px] py-[10px] text-left style-body-3">
+                        หมวดหมู่
                       </th>
                       <th class="px-[24px] py-[10px] text-left style-body-3">
                         สร้างเมื่อ
@@ -319,7 +371,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
 
                   <tbody>
                     <tr
-                      v-for="row in categoryRows"
+                      v-for="row in serviceRows"
                       :key="row.id"
                       :draggable="!isBusy"
                       :class="[
@@ -343,10 +395,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                           "
                           title="ลากเพื่อสลับลำดับ"
                         >
-                          <span
-                            class="grid grid-cols-2 gap-[3px]"
-                            aria-hidden="true"
-                          >
+                          <span class="grid grid-cols-2 gap-[3px]" aria-hidden="true">
                             <span
                               v-for="(_, dotIndex) in dragDots"
                               :key="dotIndex"
@@ -357,25 +406,36 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                       </td>
                       <td
                         class="cursor-pointer px-[24px] py-[32px] text-center style-body-2"
-                        @click="goToCategoryDetail(row.id)"
+                        @click="goToServiceDetail(row.id)"
                       >
                         {{ getDisplayOrder(row.id) }}
                       </td>
                       <td
                         class="cursor-pointer px-[24px] py-[32px] style-body-2"
-                        @click="goToCategoryDetail(row.id)"
+                        @click="goToServiceDetail(row.id)"
                       >
                         {{ row.name }}
                       </td>
                       <td
                         class="cursor-pointer px-[24px] py-[32px] style-body-2"
-                        @click="goToCategoryDetail(row.id)"
+                        @click="goToServiceDetail(row.id)"
+                      >
+                        <span
+                          class="inline-flex rounded-full px-3 py-1 style-body-4"
+                          :class="getCategoryBadgeClass(row.categoryId)"
+                        >
+                          {{ row.categoryName }}
+                        </span>
+                      </td>
+                      <td
+                        class="cursor-pointer px-[24px] py-[32px] style-body-2"
+                        @click="goToServiceDetail(row.id)"
                       >
                         {{ row.createdAt }}
                       </td>
                       <td
                         class="cursor-pointer px-[24px] py-[32px] style-body-2"
-                        @click="goToCategoryDetail(row.id)"
+                        @click="goToServiceDetail(row.id)"
                       >
                         {{ row.updatedAt }}
                       </td>
@@ -384,7 +444,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                           <button
                             type="button"
                             class="cursor-pointer text-gray-500 transition-colors hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label="Delete category"
+                            aria-label="Delete service"
                             :disabled="isBusy"
                             @click="openDeleteModal(row)"
                           >
@@ -393,9 +453,9 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
                           <button
                             type="button"
                             class="cursor-pointer text-blue-600 transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                            aria-label="Edit category"
+                            aria-label="Edit service"
                             :disabled="isBusy"
-                            @click.stop="router.push(`/admin/category/${row.id}/edit`)"
+                            @click.stop="router.push(`/admin/service/${row.id}/edit`)"
                           >
                             <component :is="Pencil" class="h-[18px] w-[18px]" />
                           </button>
@@ -405,19 +465,19 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
 
                     <tr v-if="isLoading">
                       <td
-                        colspan="6"
+                        colspan="7"
                         class="px-[24px] py-[32px] text-center style-body-2 text-gray-500"
                       >
                         กำลังโหลดข้อมูล...
                       </td>
                     </tr>
 
-                    <tr v-else-if="categoryRows.length === 0">
+                    <tr v-else-if="serviceRows.length === 0">
                       <td
-                        colspan="6"
+                        colspan="7"
                         class="px-[24px] py-[32px] text-center style-body-2 text-gray-500"
                       >
-                        ไม่พบข้อมูลหมวดหมู่
+                        ไม่พบบริการ
                       </td>
                     </tr>
                   </tbody>
@@ -429,7 +489,7 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
               class="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
             >
               <p class="style-body-2 text-gray-600">
-                แสดง {{ categoryRows.length }} จากทั้งหมด {{ totalItems }} รายการ
+                แสดง {{ serviceRows.length }} จากทั้งหมด {{ totalItems }} รายการ
               </p>
 
               <div class="flex items-center gap-3">
@@ -463,19 +523,20 @@ function mapCategoryRow(category: AdminCategoryItem): AdminCategoryRow {
 
     <AdminConfirmDeleteModal
       v-model="isDeleteModalOpen"
-      :item-name="selectedCategory?.name ?? ''"
-      title="ยืนยันการลบหมวดหมู่"
-      simple-message-template="คุณต้องการลบหมวดหมู่ {itemName} ใช่หรือไม่"
-      force-message-template="บริการในหมวด {itemName} กำลังถูกใช้งานอยู่ การลบครั้งนี้จะลบบริการที่อยู่ในหมวดนี้ทั้งหมด
-เพื่อยืนยัน กรุณาพิมพ์ชื่อหมวด {itemName} ลงด้านล่าง"
+      :item-name="selectedService?.name ?? ''"
+      title="ยืนยันการลบบริการ"
+      simple-message-template="คุณต้องการลบรายการ {itemName}
+ใช่หรือไม่"
+      force-message-template="บริการ {itemName} มีรายการบริการย่อยอยู่ในระบบ การลบครั้งนี้จะลบรายการบริการย่อยทั้งหมดของบริการนี้ด้วย
+เพื่อยืนยัน กรุณาพิมพ์ชื่อบริการ {itemName} ลงด้านล่าง"
       confirm-text="ลบรายการ"
-      force-confirm-text="ลบหมวดและบริการทั้งหมด"
-      typed-placeholder-template="พิมพ์ชื่อหมวด {itemName}"
-      typed-mismatch-message="ชื่อหมวดไม่ถูกต้อง"
+      force-confirm-text="ลบบริการและรายการย่อย"
+      typed-placeholder-template="พิมพ์ชื่อบริการ {itemName}"
+      typed-mismatch-message="ชื่อบริการไม่ถูกต้อง"
       :requires-typed-confirmation="requiresForceDelete"
       :is-submitting="isDeleting"
       :error-message="deleteModalErrorMessage"
-      @confirm="deleteCategory"
+      @confirm="deleteService"
       @cancel="closeDeleteModal"
     />
   </div>

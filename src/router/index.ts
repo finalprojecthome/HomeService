@@ -14,6 +14,7 @@ import AdminLogin from "../pages/Admin/Login.vue";
 import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 import { useAuthStore } from "../stores";
 import { showCustomToast } from "../utils/toast";
+import AdminServices from "../pages/Admin/AdminServices/AdminServices.vue";
 import TechnicianLayout from '../layouts/TechnicianLayout.vue'
 
 const BookingPage = () => import("../pages/BookingPage.vue");
@@ -27,6 +28,10 @@ const AdminDetailCategory = () =>
   import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
 const AdminEditCategory = () =>
   import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
+const AdminServicesList = () => import("../pages/Admin/AdminServices/AdminServicesList.vue");
+const AdminAddServices = () => import("../pages/Admin/AdminServices/AdminAddServices.vue");
+const AdminDetailServices = () => import("../pages/Admin/AdminServices/AdminDetailServices.vue");
+const AdminEditServices = () => import("../pages/Admin/AdminServices/AdminEditServices.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -205,7 +210,35 @@ const router = createRouter({
       path: "/booking",
       name: "booking",
       component: BookingPage,
-      meta: {requiresAuth: true}
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/admin/service",
+      name: "admin-service",
+      component: AdminServices,
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: "",
+          name: "admin-services-list",
+          component: AdminServicesList,
+        },
+        {
+          path: "add",
+          name: "admin-add-services",
+          component: AdminAddServices,
+        },
+        {
+          path: ":id",
+          name: "admin-detail-services",
+          component: AdminDetailServices,
+        },
+        {
+          path: ":id/edit",
+          name: "admin-edit-services",
+          component: AdminEditServices,
+        },
+      ],
     },
   ],
 });

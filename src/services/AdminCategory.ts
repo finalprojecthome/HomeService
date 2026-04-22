@@ -1,3 +1,4 @@
+import { invalidateAllAdminCategoriesCache } from "./adminCategoryOptions";
 import { apiAdmin } from "./apiAdmin";
 
 export type AdminCategoryScope = "all" | "filtered" | "page";
@@ -54,6 +55,12 @@ export async function createAdminCategory(payload: AdminCategoryPayload) {
     "/api/admin/categories",
     payload,
   );
+  invalidateAllAdminCategoriesCache();
+  return data;
+}
+
+export async function getAdminCategoriesAll() {
+  const { data } = await apiAdmin.get<AdminCategoryItem[]>("/api/admin/categories/all");
   return data;
 }
 
@@ -72,6 +79,7 @@ export async function updateAdminCategory(
     `/api/admin/categories/${categoryId}`,
     payload,
   );
+  invalidateAllAdminCategoriesCache();
   return data;
 }
 
@@ -81,10 +89,12 @@ export async function deleteAdminCategory(categoryId: number, force = false) {
       force: force || undefined,
     },
   });
+  invalidateAllAdminCategoriesCache();
 }
 
 export async function reorderAdminCategories(
   payload: ReorderAdminCategoriesPayload,
 ) {
   await apiAdmin.put("/api/admin/categories/reorder", payload);
+  invalidateAllAdminCategoriesCache();
 }
