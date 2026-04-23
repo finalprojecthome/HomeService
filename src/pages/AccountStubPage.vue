@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import { UserIcon, List, History, Pencil, MapIcon } from "../components/icons";
@@ -10,34 +10,22 @@ import EditProfileForm from "../components/profile/EditProfileForm.vue";
 import ResetPasswordForm from "../components/profile/ResetPasswordForm.vue";
 import AddressList from "../components/profile/AddressList.vue";
 import AddressForm from "../components/profile/AddressForm.vue";
-import orderApi from "../services/api/order";
-import type { OrderSummaryResponse } from "../types/order";
 import { mapOrderSummaryToCardFields } from "../utils/serviceOrderCardFromApi";
+import { useCustomerOrdersStore } from "../stores";
 
 const route = useRoute();
+const ordersStore = useCustomerOrdersStore();
 
-const repairOrders = ref<OrderSummaryResponse[]>([]);
-const repairOrdersLoading = ref(false);
-const repairOrdersError = ref<string | null>(null);
-
-async function loadRepairOrders() {
-  repairOrdersLoading.value = true;
-  repairOrdersError.value = null;
-  try {
-    repairOrders.value = await orderApi.listMine();
-  } catch (e) {
-    repairOrdersError.value =
-      e instanceof Error ? e.message : "โหลดรายการไม่สำเร็จ";
-  } finally {
-    repairOrdersLoading.value = false;
-  }
-}
+const activeOrdersView = computed(() => ordersStore.activeOrders ?? []);
+const completedOrdersView = computed(() => ordersStore.completedOrders ?? []);
 
 watch(
-  () => route.path,
-  (path) => {
-    if (path === "/repair-orders") {
-      void loadRepairOrders();
+  () => route.name,
+  (name) => {
+    if (name === "repairOrders") {
+      void ordersStore.ensureActiveLoaded();
+    } else if (name === "repairHistory") {
+      void ordersStore.ensureCompletedLoaded();
     }
   },
   { immediate: true },
@@ -97,24 +85,48 @@ const sidebarclass =
             <AddressForm mode="edit" v-else />
           </template>
           <template v-else-if="route.path === '/repair-orders'">
-            <template v-if="repairOrdersLoading">
+            <template v-if="ordersStore.loadingActive">
               <ServiceOrderCardSkeleton v-for="n in 2" :key="'order-skel-' + n" />
             </template>
             <p
-              v-else-if="repairOrdersError"
+              v-else-if="ordersStore.errorActive"
               class="style-body-2 text-red-600 py-4"
             >
-              {{ repairOrdersError }}
+              {{ ordersStore.errorActive }}
             </p>
             <p
-              v-else-if="repairOrders.length === 0"
+              v-else-if="activeOrdersView.length === 0"
               class="style-body-2 text-gray-600 py-4"
             >
               ยังไม่มีรายการคำสั่งซ่อม
             </p>
             <template v-else>
               <ServiceOrderCard
-                v-for="order in repairOrders"
+                v-for="order in activeOrdersView"
+                :key="order.id"
+                v-bind="mapOrderSummaryToCardFields(order)"
+              />
+            </template>
+          </template>
+          <template v-else-if="route.path === '/repair-history'">
+            <template v-if="ordersStore.loadingCompleted">
+              <ServiceOrderCardSkeleton v-for="n in 2" :key="'hist-skel-' + n" />
+            </template>
+            <p
+              v-else-if="ordersStore.errorCompleted"
+              class="style-body-2 text-red-600 py-4"
+            >
+              {{ ordersStore.errorCompleted }}
+            </p>
+            <p
+              v-else-if="completedOrdersView.length === 0"
+              class="style-body-2 text-gray-600 py-4"
+            >
+              ยังไม่มีประวัติการซ่อม
+            </p>
+            <template v-else>
+              <ServiceOrderCard
+                v-for="order in completedOrdersView"
                 :key="order.id"
                 v-bind="mapOrderSummaryToCardFields(order)"
               />
