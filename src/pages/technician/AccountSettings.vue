@@ -1,0 +1,279 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import ActionButton from '../../components/ui/ActionButton.vue';
+import ToggleSwitch from '../../components/ui/ToggleSwitch.vue';
+import CheckBox from '../../components/ui/CheckBox.vue';
+import technicianApi from '../../services/api/technician';
+import locationApi from '../../services/api/location';
+import type { Province, District, SubDistrict } from '../../services/api/location';
+import { showCustomToast } from '../../utils/toast';
+
+// Form State
+const formData = ref({
+  firstName: '',
+  lastName: '',
+  phone: '',
+  address: '',
+  subDistrictId: 1,
+  isAvailable: false,
+  bio: '',
+  latitude: 0,
+  longitude: 0,
+  serviceIds: [] as number[],
+});
+
+const availableServices = ref<{id: number, title: string}[]>([]);
+const isLoading = ref(true);
+
+const provinces = ref<Province[]>([]);
+const districts = ref<District[]>([]);
+const subDistricts = ref<SubDistrict[]>([]);
+
+const selectedProvince = ref<number | null>(null);
+const selectedDistrict = ref<number | null>(null);
+
+const loadProfile = async () => {
+  isLoading.value = true;
+  try {
+    const [profile, services, allProvinces] = await Promise.all([
+      technicianApi.getProfile(),
+      technicianApi.getServices(),
+      locationApi.getProvinces()
+    ]);
+
+    availableServices.value = services;
+    provinces.value = allProvinces;
+
+    // Split name into first and last name if possible
+    const nameParts = (profile.name || '').split(' ');
+    formData.value.firstName = nameParts[0] || '';
+    formData.value.lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    formData.value.phone = profile.phone || '';
+    formData.value.address = profile.addressDetail || '';
+    formData.value.subDistrictId = profile.subDistrictId || 0;
+    formData.value.isAvailable = profile.isAvailable;
+    formData.value.bio = profile.bio || '';
+    formData.value.latitude = profile.latitude || 0;
+    formData.value.longitude = profile.longitude || 0;
+    formData.value.serviceIds = profile.serviceIds || [];
+
+    // Attempt to reverse-load the hierarchy from subDistrictId
+    if (formData.value.subDistrictId) {
+      // Note: This would ideally be done by a single "path" API call, 
+      // but for now we'll just let the user re-select or implement if needed.
+    }
+  } catch (error) {
+    showCustomToast({ variant: 'error', title: 'เกิดข้อผิดพลาด', description: 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้' });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleProvinceChange = async () => {
+  if (selectedProvince.value) {
+    districts.value = await locationApi.getDistricts(selectedProvince.value);
+    selectedDistrict.value = null;
+    subDistricts.value = [];
+    formData.value.subDistrictId = 0;
+  }
+};
+
+const handleDistrictChange = async () => {
+  if (selectedDistrict.value) {
+    subDistricts.value = await locationApi.getSubDistricts(selectedDistrict.value);
+    formData.value.subDistrictId = 0;
+  }
+};
+
+onMounted(() => {
+  loadProfile();
+});
+
+const handleCancel = () => {
+  loadProfile(); // Reset to backend data
+};
+
+const handleConfirm = async () => {
+  try {
+    const payload = {
+      name: `${formData.value.firstName} ${formData.value.lastName}`.trim(),
+      phone: formData.value.phone,
+      addressDetail: formData.value.address,
+      subDistrictId: formData.value.subDistrictId,
+      isAvailable: formData.value.isAvailable,
+      bio: formData.value.bio,
+      latitude: formData.value.latitude,
+      longitude: formData.value.longitude,
+      serviceIds: formData.value.serviceIds
+    };
+
+    await technicianApi.updateProfile(payload);
+    showCustomToast({ title: 'สำเร็จ', description: 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว' });
+  } catch (err) {
+    showCustomToast({ variant: 'error', title: 'เกิดข้อผิดพลาด', description: 'ไม่สามารถบันทึกข้อมูลได้' });
+  }
+};
+
+const isRefreshingLocation = ref(false);
+
+const handleRefreshLocation = () => {
+  isRefreshingLocation.value = true;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          formData.value.latitude = lat;
+          formData.value.longitude = lng;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`);
+            const data = await res.json();
+            if (data && data.display_name) {
+              formData.value.address = data.display_name;
+            } else {
+              formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+          } catch (e) {
+          console.error("Geocoding error", e);
+          formData.value.address = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+        isRefreshingLocation.value = false;
+      },
+      (error) => {
+        console.error("Error getting location: ", error);
+        alert("ไม่สามารถเข้าถึงตำแหน่งได้: กรุณาอนุญาตการเข้าถึง Location ใน Browser");
+        isRefreshingLocation.value = false;
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by this browser.");
+    isRefreshingLocation.value = false;
+  }
+};
+</script>
+
+<template>
+  <div class="flex flex-col w-full max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-100">
+      <h1 class="style-headline-2 text-gray-900">ตั้งค่าบัญชีผู้ใช้</h1>
+      <div class="flex items-center gap-4">
+        <ActionButton variant="secondary" @click="handleCancel">ยกเลิก</ActionButton>
+        <ActionButton @click="handleConfirm">ยืนยัน</ActionButton>
+      </div>
+    </div>
+
+    <!-- Scrollable Form Area -->
+    <div class="p-8 flex flex-col gap-10">
+      
+      <!-- Account Details -->
+      <section>
+        <h2 class="style-headline-3 text-gray-900 mb-6">รายละเอียดบัญชี</h2>
+        
+        <div class="grid grid-cols-[180px_1fr] md:grid-cols-[240px_1fr] items-center gap-y-6">
+          <label class="text-gray-900 style-headline-5">ชื่อ<span class="text-red-500">*</span></label>
+          <input 
+            v-model="formData.firstName" 
+            type="text" 
+            class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+          />
+
+          <label class="text-gray-900 style-headline-5">นามสกุล<span class="text-red-500">*</span></label>
+          <input 
+            v-model="formData.lastName" 
+            type="text" 
+            class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+          />
+
+          <label class="text-gray-900 style-headline-5">เบอร์ติดต่อ<span class="text-red-500">*</span></label>
+          <input 
+            v-model="formData.phone" 
+            type="text" 
+            class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+          />
+
+          <label class="text-gray-900 style-headline-5">Bio / ข้อมูลแนะนำตัว</label>
+          <textarea 
+            v-model="formData.bio" 
+            rows="3"
+            class="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 style-body-1 focus:outline-none focus:border-blue-500" 
+            placeholder="เขียนแนะนำตัวหรือความถนัดของคุณที่นี่..."
+          ></textarea>
+
+          <label class="text-gray-900 style-headline-5">ตำแหน่งที่อยู่ปัจจุบัน<span class="text-red-500">*</span></label>
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-2">
+              <input 
+                v-model="formData.address" 
+                type="text" 
+                readonly
+                placeholder="ปักหมุดตำแหน่งเพื่อความแม่นยำสูง"
+                class="w-full max-w-md border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed rounded-lg px-4 py-2 style-body-1 focus:outline-none" 
+              />
+              <ActionButton variant="secondary" @click="handleRefreshLocation" :disabled="isRefreshingLocation">{{ isRefreshingLocation ? 'กำลังค้นหา...' : 'รีเฟรช' }}</ActionButton>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 w-full max-w-md">
+              <select v-model="selectedProvince" @change="handleProvinceChange" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500">
+                <option :value="null" disabled>เลือกจังหวัด</option>
+                <option v-for="p in provinces" :key="p.provinceId" :value="p.provinceId">{{ p.name }}</option>
+              </select>
+              
+              <select v-model="selectedDistrict" @change="handleDistrictChange" :disabled="!selectedProvince" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                <option :value="null" disabled>เลือกอำเภอ</option>
+                <option v-for="d in districts" :key="d.districtId" :value="d.districtId">{{ d.name }}</option>
+              </select>
+
+              <select v-model="formData.subDistrictId" :disabled="!selectedDistrict" class="border border-gray-300 rounded-lg px-3 py-2 style-body-2 outline-none focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                <option :value="0" disabled>เลือกตำบล</option>
+                <option v-for="sd in subDistricts" :key="sd.subDistrictId" :value="sd.subDistrictId">{{ sd.name }}</option>
+              </select>
+            </div>
+            <p class="text-gray-400 style-body-3">* หากยังไม่ได้ปักหมุด ระบบจะระบุพิกัดเริ่มต้นตามเขตที่คุณเลือก</p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="border-gray-100" />
+
+      <!-- Account Status -->
+      <section>
+        <div class="grid grid-cols-[180px_1fr] md:grid-cols-[240px_1fr] items-start">
+          <label class="text-gray-900 style-headline-3">สถานะบัญชี</label>
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <ToggleSwitch v-model="formData.isAvailable" />
+              <span class="text-gray-900 style-body-1">พร้อมให้บริการ</span>
+            </div>
+            <p class="text-gray-500 style-body-2">
+              ระบบจะแสดงคำสั่งซ่อมในบริเวณใกล้เคียงกับตำแหน่งที่อยู่ปัจจุบัน เพื่ออำนวยความสะดวกในการรับงาน
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="border-gray-100" />
+
+      <!-- Offered Services -->
+      <section>
+        <div class="grid grid-cols-[180px_1fr] md:grid-cols-[240px_1fr] items-start">
+          <label class="text-gray-900 style-headline-3">บริการที่รับซ่อม</label>
+          <div class="flex flex-col gap-4 mt-1">
+            <CheckBox 
+              v-for="svc in availableServices"
+              :key="svc.id"
+              :model-value="formData.serviceIds.includes(svc.id)"
+              @update:model-value="(val) => {
+                if (val) formData.serviceIds.push(svc.id);
+                else formData.serviceIds = formData.serviceIds.filter(id => id !== svc.id);
+              }"
+              :label="svc.title" 
+            />
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</template>
