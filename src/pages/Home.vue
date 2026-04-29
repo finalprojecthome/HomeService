@@ -35,7 +35,7 @@ const featuredServices = [
 ] as const;
 
 const heroClass =
-  "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-55px] md:right-[-18px] md:max-w-[520px]  lg:w-[400px] xl:w-[520px] lg:bottom-[-150px] lg:right-[-18px] 2xl:right-[100px] 2xl:bottom-[-150px]";
+  "absolute bottom-[-37px] right-[-18px] w-[280px] md:bottom-[-55px] md:right-[-18px] md:max-w-[520px] lg:w-[400px] lg:bottom-[-150px] lg:right-[-18px] xl:w-[430px] 2xl:w-[430px] 2xl:right-[-70px] 3xl:w-[520px] 3xl:right-[80px]";
 </script>
 
 <template>
@@ -75,7 +75,7 @@ const heroClass =
             </div>
 
             <div
-              class="relative w-full h-[230px] sm:h-[260px] md:h-auto flex justify-end"
+              class="absolute w-[290px] h-auto bottom-9 right-5 sm:right-15 md:right-30 md:bottom-14 lg:bottom-37 lg:right-50 2xl:w-[350px] flex justify-end"
             >
               <img
                 :src="heroImgSrc"

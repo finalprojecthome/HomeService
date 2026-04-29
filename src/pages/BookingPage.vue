@@ -12,7 +12,7 @@ import BookingStep1, {
 import BookingStep2, {
   type BookingStep2Value,
 } from "../features/booking/components/BookingStep2.vue";
-import { useAddressStore } from "../stores";
+import { useAddressStore, useCustomerOrdersStore } from "../stores";
 import BookingStep3, {
   type BookingStep3Value,
 } from "../features/booking/components/BookingStep3.vue";
@@ -46,6 +46,7 @@ const serviceName = computed(
 );
 
 const addressStore = useAddressStore();
+const customerOrdersStore = useCustomerOrdersStore();
 
 const subServices = ref<SubService[]>([]);
 
@@ -214,6 +215,8 @@ async function handleNext() {
     const orderId = await createOrder(payload);
 
     console.log("orderId:", orderId);
+
+    customerOrdersStore.invalidateAfterNewOrder();
 
     alert("จองสำเร็จ: " + orderId);
   } catch (error) {
