@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import useCustomerOrdersStore from "./customerOrders";
 import authApi from "../services/api/auth";
 import type { LoginFormValues, RegisterFormValues } from "../types/auth";
 import type { User } from "../types/user";
@@ -113,6 +114,7 @@ const useAuthStore = defineStore("auth", {
       this.message = null;
       this.error = null;
       this.isGetUserLoading = null;
+      useCustomerOrdersStore().invalidateAll();
     },
   },
 });

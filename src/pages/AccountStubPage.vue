@@ -1,16 +1,35 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import MainWithNarbar from "../components/layouts/MainWithNarbar.vue";
 import { UserIcon, List, History, Pencil, MapIcon } from "../components/icons";
 import UserBox from "../components/UserBox.vue";
 import ServiceOrderCard from "../components/ServiceOrderCard.vue";
+import ServiceOrderCardSkeleton from "../components/ServiceOrderCardSkeleton.vue";
 import EditProfileForm from "../components/profile/EditProfileForm.vue";
 import ResetPasswordForm from "../components/profile/ResetPasswordForm.vue";
 import AddressList from "../components/profile/AddressList.vue";
 import AddressForm from "../components/profile/AddressForm.vue";
+import { mapOrderSummaryToCardFields } from "../utils/serviceOrderCardFromApi";
+import { useCustomerOrdersStore } from "../stores";
 
 const route = useRoute();
+const ordersStore = useCustomerOrdersStore();
+
+const activeOrdersView = computed(() => ordersStore.activeOrders ?? []);
+const completedOrdersView = computed(() => ordersStore.completedOrders ?? []);
+
+watch(
+  () => route.name,
+  (name) => {
+    if (name === "repairOrders") {
+      void ordersStore.ensureActiveLoaded();
+    } else if (name === "repairHistory") {
+      void ordersStore.ensureCompletedLoaded();
+    }
+  },
+  { immediate: true },
+);
 
 const title = computed(() => String(route.meta.title ?? ""));
 const sidebarItems = [
@@ -21,7 +40,7 @@ const sidebarItems = [
   },
   {
     icon: MapIcon,
-    label: "ที่อยู่ของฉัน",
+    label: "\u0e17\u0e35\u0e48\u0e2d\u0e22\u0e39\u0e48\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19",
     path: "/address",
   },
   {
@@ -66,33 +85,52 @@ const sidebarclass =
             <AddressForm mode="edit" v-else />
           </template>
           <template v-else-if="route.path === '/repair-orders'">
-            <ServiceOrderCard
-              orderId="AD04071205"
-              status="pending"
-              statusLabel="รอดำเนินการ"
-              date="25/04/63 เวลา 13.00 น."
-              staff="สมาน ไมตรี"
-              :price="1550"
-              :items="['ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง']"
-            />
-            <ServiceOrderCard
-              orderId="AD04071205"
-              status="completed"
-              statusLabel="ดำเนินการเสร็จสิ้น"
-              date="25/04/63 เวลา 13.00 น."
-              staff="สมาน ไมตรี"
-              :price="1550"
-              :items="['ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง']"
-            />
-            <ServiceOrderCard
-              orderId="AD04071205"
-              status="pending"
-              statusLabel="รอดำเนินการ"
-              date="25/04/63 เวลา 13.00 น."
-              staff="สมาน ไมตรี"
-              :price="1550"
-              :items="['ล้างแอร์ 9,000 - 18,000 BTU, ติดผนัง 2 เครื่อง']"
-            />
+            <template v-if="ordersStore.loadingActive">
+              <ServiceOrderCardSkeleton v-for="n in 2" :key="'order-skel-' + n" />
+            </template>
+            <p
+              v-else-if="ordersStore.errorActive"
+              class="style-body-2 text-red-600 py-4"
+            >
+              {{ ordersStore.errorActive }}
+            </p>
+            <p
+              v-else-if="activeOrdersView.length === 0"
+              class="style-body-2 text-gray-600 py-4"
+            >
+              ยังไม่มีรายการคำสั่งซ่อม
+            </p>
+            <template v-else>
+              <ServiceOrderCard
+                v-for="order in activeOrdersView"
+                :key="order.id"
+                v-bind="mapOrderSummaryToCardFields(order)"
+              />
+            </template>
+          </template>
+          <template v-else-if="route.path === '/repair-history'">
+            <template v-if="ordersStore.loadingCompleted">
+              <ServiceOrderCardSkeleton v-for="n in 2" :key="'hist-skel-' + n" />
+            </template>
+            <p
+              v-else-if="ordersStore.errorCompleted"
+              class="style-body-2 text-red-600 py-4"
+            >
+              {{ ordersStore.errorCompleted }}
+            </p>
+            <p
+              v-else-if="completedOrdersView.length === 0"
+              class="style-body-2 text-gray-600 py-4"
+            >
+              ยังไม่มีประวัติการซ่อม
+            </p>
+            <template v-else>
+              <ServiceOrderCard
+                v-for="order in completedOrdersView"
+                :key="order.id"
+                v-bind="mapOrderSummaryToCardFields(order)"
+              />
+            </template>
           </template>
           <template v-else-if="route.path === '/reset-password'">
             <ResetPasswordForm />
