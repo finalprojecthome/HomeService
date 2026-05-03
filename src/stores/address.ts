@@ -28,6 +28,11 @@ const useAddressStore = defineStore("address", {
         this.isLoading = false;
       }
     },
+
+    clearAddress() {
+      this.addresses = [];
+      this.error = null;
+    },
   },
 });
 
