@@ -15,7 +15,7 @@ import AdminCategory from "../pages/Admin/AdminCategory/AdminCategory.vue";
 import { useAuthStore } from "../stores";
 import { showCustomToast } from "../utils/toast";
 import AdminServices from "../pages/Admin/AdminServices/AdminServices.vue";
-import TechnicianLayout from '../layouts/TechnicianLayout.vue'
+import TechnicianLayout from "../layouts/TechnicianLayout.vue";
 
 const BookingPage = () => import("../pages/BookingPage.vue");
 const Login = () => import("../pages/Login.vue");
@@ -28,10 +28,14 @@ const AdminDetailCategory = () =>
   import("../pages/Admin/AdminCategory/AdminDetailCategory.vue");
 const AdminEditCategory = () =>
   import("../pages/Admin/AdminCategory/AdminEditCategory.vue");
-const AdminServicesList = () => import("../pages/Admin/AdminServices/AdminServicesList.vue");
-const AdminAddServices = () => import("../pages/Admin/AdminServices/AdminAddServices.vue");
-const AdminDetailServices = () => import("../pages/Admin/AdminServices/AdminDetailServices.vue");
-const AdminEditServices = () => import("../pages/Admin/AdminServices/AdminEditServices.vue");
+const AdminServicesList = () =>
+  import("../pages/Admin/AdminServices/AdminServicesList.vue");
+const AdminAddServices = () =>
+  import("../pages/Admin/AdminServices/AdminAddServices.vue");
+const AdminDetailServices = () =>
+  import("../pages/Admin/AdminServices/AdminDetailServices.vue");
+const AdminEditServices = () =>
+  import("../pages/Admin/AdminServices/AdminEditServices.vue");
 
 const router = createRouter({
   history: createWebHistory(),
@@ -58,7 +62,7 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลผู้ใช้งาน",
         requiresAuth: true,
-        roles: ["user", "customer"],
+        roles: ["customer"],
       },
     },
     {
@@ -68,8 +72,20 @@ const router = createRouter({
       meta: {
         title: "ข้อมูลที่อยู่",
         requiresAuth: true,
-        roles: ["user", "customer"],
+        roles: ["customer"],
       },
+      children: [
+        {
+          path: "add",
+          name: "addAddress",
+          component: AccountStubPage,
+        },
+        {
+          path: "edit/:id",
+          name: "editAddress",
+          component: AccountStubPage,
+        },
+      ],
     },
     {
       path: "/repair-orders",
@@ -78,7 +94,7 @@ const router = createRouter({
       meta: {
         title: "รายการคำสั่งซ่อม",
         requiresAuth: true,
-        roles: ["user", "customer"],
+        roles: ["customer"],
       },
     },
     {
@@ -88,7 +104,7 @@ const router = createRouter({
       meta: {
         title: "ประวัติการซ่อม",
         requiresAuth: true,
-        roles: ["user", "customer"],
+        roles: ["customer"],
       },
     },
     {
@@ -98,7 +114,7 @@ const router = createRouter({
       meta: {
         title: "เปลี่ยนรหัสผ่าน",
         requiresAuth: true,
-        roles: ["user", "customer"],
+        roles: ["customer"],
       },
     },
     {
@@ -109,47 +125,6 @@ const router = createRouter({
         title: "เข้าสู่ระบบ",
         requiresGuest: true,
       },
-    },
-    {
-      path: '/technician',
-      component: TechnicianLayout,
-      redirect: '/technician/requests',
-      meta: {
-        requiresAuth: true,
-        roles: ['technician']
-      },
-      children: [
-        {
-          path: 'requests',
-          name: 'technician-requests',
-          component: () => import('../pages/technician/ServiceRequests.vue')
-        },
-        {
-          path: 'pending',
-          name: 'technician-pending',
-          component: () => import('../pages/technician/PendingTasks.vue')
-        },
-        {
-          path: 'pending/:id',
-          name: 'technician-pending-details',
-          component: () => import('../pages/technician/PendingTaskDetails.vue')
-        },
-        {
-          path: 'history',
-          name: 'technician-history',
-          component: () => import('../pages/technician/HistoryTasks.vue')
-        },
-        {
-          path: 'history/:id',
-          name: 'technician-history-details',
-          component: () => import('../pages/technician/HistoryTaskDetails.vue')
-        },
-        {
-          path: 'settings',
-          name: 'technician-settings',
-          component: () => import('../pages/technician/AccountSettings.vue')
-        }
-      ]
     },
     {
       path: "/login",
@@ -167,6 +142,47 @@ const router = createRouter({
     {
       path: "/register",
       redirect: "/auth/register",
+    },
+    {
+      path: "/technician",
+      component: TechnicianLayout,
+      redirect: "/technician/requests",
+      meta: {
+        requiresAuth: true,
+        roles: ["technician"],
+      },
+      children: [
+        {
+          path: "requests",
+          name: "technician-requests",
+          component: () => import("../pages/technician/ServiceRequests.vue"),
+        },
+        {
+          path: "pending",
+          name: "technician-pending",
+          component: () => import("../pages/technician/PendingTasks.vue"),
+        },
+        {
+          path: "pending/:id",
+          name: "technician-pending-details",
+          component: () => import("../pages/technician/PendingTaskDetails.vue"),
+        },
+        {
+          path: "history",
+          name: "technician-history",
+          component: () => import("../pages/technician/HistoryTasks.vue"),
+        },
+        {
+          path: "history/:id",
+          name: "technician-history-details",
+          component: () => import("../pages/technician/HistoryTaskDetails.vue"),
+        },
+        {
+          path: "settings",
+          name: "technician-settings",
+          component: () => import("../pages/technician/AccountSettings.vue"),
+        },
+      ],
     },
     {
       path: "/auth/admin/register",
@@ -301,10 +317,8 @@ router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth && to.meta.roles) {
     const roles = to.meta.roles as string[];
     // Cast to string for broad comparison
-    const userRole = role as string;
-    const currentRole = userRole === "customer" ? "user" : userRole;
-    
-    if (userRole && !roles.includes(userRole) && !roles.includes(currentRole)) {
+
+    if (role && !roles.includes(role)) {
       showCustomToast({
         variant: "error",
         title: "ไม่สามารถเข้าถึงหน้านี้",
